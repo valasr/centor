@@ -1,0 +1,149 @@
+
+syntax = "proto3";
+import "google/protobuf/any.proto";
+
+
+package proto;
+option go_package = ".;proto";
+
+
+
+// close response
+message Close {}
+
+
+message ProxyRequest {
+  string proxy_port = 1;
+}
+
+message EmptyRequest{}
+message InfoResponse{
+  string id = 1;
+  bool is_leader = 2;
+  int32 weight = 3;
+}
+
+message CreateProxyRequest{
+  string target_id= 1;
+  string target_service_port = 2;
+}
+
+message PingRequest{}
+message PongResponse{}
+
+message CallRequest{
+  string agent_id = 1;
+}
+message CallResponse{
+  repeated string tags = 1;
+}
+
+
+message ConnectMessage {
+  string id = 1;
+  string addr = 2;
+  bool is_server = 3;
+  bool is_leader = 4;
+  string parent_id = 5;
+  string DataCenter = 6;
+}
+message ConnectBackMessage {
+  string id = 1;
+}
+
+
+message ChangeRequest{
+  oneof change {
+    NodesChange nodes_change = 1;
+  }
+}
+message NoticeRequest{
+  oneof notice {
+    NodesChange nodes_change = 1;
+  }
+}
+message NodesChange {
+  string id = 1;
+  int32 action = 2;
+  string data = 3;
+}
+
+
+message SendFileRequest{
+  oneof data{
+    FileInfo info = 1;
+    bytes chunk_data = 2;
+    bool   end = 3;
+  }
+}
+message FileInfo {
+  string id  = 1;
+  string name = 2;
+  uint32 size = 3;
+}
+
+message SendFileReponse{
+  string id = 1;
+  string path = 2;
+}
+
+message ExecRequest{
+  string node_id = 1;
+  string command = 2;
+}
+message ExecResponse{
+  string output = 1;
+}
+
+message EventRequest{
+  string from = 1;
+  string name = 2;
+  repeated google.protobuf.Any params = 3;
+}
+
+message APIRequest{
+  string id = 1;
+  string method = 2;
+  string body = 3;
+  string addr = 4;
+    
+}
+message APIResponse{
+  string id = 1;
+  string body = 2;
+  string error = 3;
+  int32 status = 4;
+  string host = 5;
+}
+
+
+
+service Discovery {
+  rpc GetInfo(EmptyRequest) returns (InfoResponse);
+  rpc Connect(stream ConnectMessage) returns (stream ConnectBackMessage); // child -> parent
+  rpc Ping(PingRequest) returns (PongResponse);
+  rpc Call(CallRequest) returns (CallResponse);
+
+  rpc CallAPI(APIRequest) returns (APIResponse);
+  rpc SendFile(stream SendFileRequest) returns (SendFileReponse);
+  rpc FireEvent(EventRequest) returns (Close);
+  rpc Exec(ExecRequest) returns (ExecResponse);
+
+  rpc Change(ChangeRequest) returns (Close);
+  rpc Notice(NoticeRequest) returns (Close);
+}
+
+// ================== Client Proxy Service ================
+
+message RequestPayload {
+  bytes conn = 1;
+  string token = 2;  // implement in future
+}
+
+message ResponsePayload {
+  bytes body = 1;
+}
+
+service ProxyManager{
+  rpc SendPayload(RequestPayload) returns (ResponsePayload);
+}

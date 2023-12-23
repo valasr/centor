@@ -1,0 +1,87 @@
+version: '3'
+
+services:
+  centor-server-1-1:
+    image: mrtdeh/centor:with-envoy
+    command: --api
+    networks:
+      - cluster
+    environment:
+      - NAME=ali
+      - DC=dc1
+      - PORT=3000
+      - SERVER=true
+      - LEADER=true
+      - ALTERNATIVE_HOST=centor-server-1-1
+      - SSL_ENABLED=yes
+      - SSL_CA=/certs/ca.crt
+      - SSL_CERT=/certs/server.crt
+      - SSL_KEY=/certs/server.key
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./pkg/envoy/testData/certs:/certs
+
+  centor-server-1-2:
+    image: mrtdeh/centor:with-envoy
+    networks:
+      - cluster
+    environment:
+      - NAME=reza
+      - DC=dc1
+      - PORT=3002
+      - SERVER=true
+      - JOIN=centor-server-1-1:3001
+      - ALTERNATIVE_HOST=centor-server-1-2
+   
+
+
+  centor-client-1-1:
+    image: mrtdeh/centor:with-envoy
+    networks:
+      - cluster
+    environment:
+      - NAME=client-1-1
+      - DC=dc1
+      - PORT=4001
+      - JOIN=centor-server-1-1:3001,centor-server-1-2:3003
+      - ALTERNATIVE_HOST=centor-client-1-1
+    depends_on:
+      - centor-server-1-1   
+      - centor-server-1-2   
+
+  centor-client-1-2:
+    image: mrtdeh/centor:with-envoy
+    networks:
+      - cluster
+    environment:
+      - NAME=client-1-2
+      - DC=dc1
+      - PORT=4002
+      - JOIN=centor-server-1-1:3001,centor-server-1-2:3003
+      - ALTERNATIVE_HOST=centor-client-1-2
+    depends_on:
+      - centor-server-1-1   
+      - centor-server-1-2  
+ 
+
+  centor-client-1-3:
+    image: mrtdeh/centor:with-envoy
+    networks:
+      - cluster
+    environment:
+      - NAME=client-1-3
+      - DC=dc1
+      - PORT=4003
+      - JOIN=centor-server-1-1:3001,centor-server-1-2:3003
+      - ALTERNATIVE_HOST=centor-client-1-3
+    depends_on:
+      - centor-server-1-1   
+      - centor-server-1-2  
+   
+
+networks:
+  cluster:
+    # Use a custom driver
+    driver: bridge
+    name: centor_network
