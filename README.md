@@ -1,5 +1,4 @@
 # Centor
-----
 Centor is a distributed, highly flexible, highly available service that provides a simple interface to secure, connect, and monitor nodes and services in the clusters and can be used for different environments such kubernetes or scrach server.
 
 ## Features
