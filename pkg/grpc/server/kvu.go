@@ -3,6 +3,8 @@ package grpc_server
 import (
 	"context"
 	"errors"
+	"fmt"
+	"log"
 	"sync"
 
 	"github.com/mrtdeh/centor/pkg/kive"
@@ -11,11 +13,16 @@ import (
 
 type KVHandler struct{}
 
-func (h *KVHandler) Sync(pr kive.PublishRequest) {
+func Sync(pr kive.PublishRequest, from string) {
+	if from == "" {
+		from = app.id
+	}
+
 	k := KVPool{
 		Key:    pr.Record.Key,
 		Value:  pr.Record.Value,
 		Action: pr.Action,
+		From:   from,
 	}
 	go kvm.SendKVtoAll(app, &k)
 }
@@ -26,6 +33,7 @@ type KVPool struct {
 	TargetId  string
 	LastError string
 	Action    string
+	From      string
 	done      bool
 }
 
@@ -34,7 +42,9 @@ type KVPoolManager struct {
 	l     sync.RWMutex
 }
 
-var kvm = &KVPoolManager{}
+var kvm = &KVPoolManager{
+	pools: make(map[string]*KVPool),
+}
 
 func GetKVManager() *KVPoolManager {
 	return kvm
@@ -46,21 +56,27 @@ func (m *KVPoolManager) SendKVtoAll(a *agent, kvp *KVPool) error {
 
 	if a.parent != nil {
 		tid := a.parent.id
-		err := sendKVtoParent(a, kvp)
-		if err != nil {
-			kvp.TargetId = tid
-			m.pools[tid] = kvp
-			return nil
+		if tid != kvp.From {
+			err := sendKVtoParent(a, kvp)
+			if err != nil {
+				kvp.TargetId = tid
+				m.pools[tid] = kvp
+				return nil
+			}
 		}
 	}
 	if a.childs != nil {
 		for _, c := range a.childs {
 			tid := c.id
-			err := sendKVtoChild(a, c, kvp)
-			if err != nil {
-				kvp.TargetId = tid
-				m.pools[tid] = kvp
-				return err
+			if tid != kvp.From {
+				fmt.Println("send kv to child : ", tid)
+				err := sendKVtoChild(a, c, kvp)
+				if err != nil {
+					log.Println("error in send kv to child : ", err)
+					kvp.TargetId = tid
+					m.pools[tid] = kvp
+					return err
+				}
 			}
 		}
 	}
@@ -104,22 +120,20 @@ func sendKVtoParent(a *agent, kvp *KVPool) error {
 	return nil
 }
 
-// func (m *KVPoolManager) Del(pid string) {
-// 	m.l.Lock()
-// 	defer m.l.Unlock()
-// 	delete(m.pools, pid)
-// }
-
 func (a *agent) KVU(ctx context.Context, req *proto.KVURequest) (*proto.KVUResponse, error) {
+	fmt.Println("hit kv update from ", req.From)
+	var kv *kive.PublishRequest
+	var err error
+
 	if req.Action == "add" {
-		err := kive.Put(req.Key, req.Value)
+		kv, err = kive.Put(req.Key, req.Value)
 		if err != nil {
 			return &proto.KVUResponse{
 				Error: err.Error(),
 			}, nil
 		}
 	} else if req.Action == "delete" {
-		err := kive.Del(req.Key)
+		kv, err = kive.Del(req.Key)
 		if err != nil {
 			return &proto.KVUResponse{
 				Error: err.Error(),
@@ -127,5 +141,8 @@ func (a *agent) KVU(ctx context.Context, req *proto.KVURequest) (*proto.KVURespo
 		}
 	}
 
+	if kv != nil {
+		go Sync(*kv, req.From)
+	}
 	return &proto.KVUResponse{}, nil
 }

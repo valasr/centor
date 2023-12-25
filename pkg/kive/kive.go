@@ -15,14 +15,9 @@ const (
 
 var db *KiveDB
 
-type Config struct {
-	ServerHandler KiveServerInterface
-}
-
-func Init(cnf Config) {
+func init() {
 	db = &KiveDB{
-		Data:          make(map[string]PublishRequest),
-		ServerHandler: cnf.ServerHandler,
+		Data: make(map[string]PublishRequest),
 	}
 }
 
@@ -69,21 +64,19 @@ func LoadDB() error {
 
 	return nil
 }
-func Del(id string) error {
+func Del(id string) (*PublishRequest, error) {
 	db.m.Lock()
 	defer db.m.Unlock()
-	if kv, ok := db.Data[id]; ok {
+	var kv PublishRequest
+	var ok bool
+	if kv, ok = db.Data[id]; ok {
 		kv.Action = "delete"
-		db.ServerHandler.Sync(kv)
-		// if err != nil {
-		// 	return err
-		// }
 	}
 	delete(db.Data, id)
-	return nil
+	return &kv, nil
 }
 
-func Put(key, value string) error {
+func Put(key, value string) (*PublishRequest, error) {
 	db.m.Lock()
 	defer db.m.Unlock()
 	id := generateHash(key)
@@ -100,11 +93,6 @@ func Put(key, value string) error {
 	}
 	db.Data[key] = kv
 
-	db.ServerHandler.Sync(kv)
-	// if err != nil {
-	// 	return err
-	// }
-
 	// jsonData, err := json.Marshal(db.Data)
 	// if err != nil {
 	// 	return fmt.Errorf("error in marshalling : %s", err)
@@ -119,7 +107,7 @@ func Put(key, value string) error {
 	// 	db.Data[id] = r
 	// }
 
-	return nil
+	return &kv, nil
 
 }
 
