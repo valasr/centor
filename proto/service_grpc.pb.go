@@ -30,6 +30,7 @@ type DiscoveryClient interface {
 	SendFile(ctx context.Context, opts ...grpc.CallOption) (Discovery_SendFileClient, error)
 	FireEvent(ctx context.Context, in *EventRequest, opts ...grpc.CallOption) (*Close, error)
 	Exec(ctx context.Context, in *ExecRequest, opts ...grpc.CallOption) (*ExecResponse, error)
+	KVU(ctx context.Context, in *KVURequest, opts ...grpc.CallOption) (*KVUResponse, error)
 	Change(ctx context.Context, in *ChangeRequest, opts ...grpc.CallOption) (*Close, error)
 	Notice(ctx context.Context, in *NoticeRequest, opts ...grpc.CallOption) (*Close, error)
 }
@@ -161,6 +162,15 @@ func (c *discoveryClient) Exec(ctx context.Context, in *ExecRequest, opts ...grp
 	return out, nil
 }
 
+func (c *discoveryClient) KVU(ctx context.Context, in *KVURequest, opts ...grpc.CallOption) (*KVUResponse, error) {
+	out := new(KVUResponse)
+	err := c.cc.Invoke(ctx, "/proto.Discovery/KVU", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *discoveryClient) Change(ctx context.Context, in *ChangeRequest, opts ...grpc.CallOption) (*Close, error) {
 	out := new(Close)
 	err := c.cc.Invoke(ctx, "/proto.Discovery/Change", in, out, opts...)
@@ -191,6 +201,7 @@ type DiscoveryServer interface {
 	SendFile(Discovery_SendFileServer) error
 	FireEvent(context.Context, *EventRequest) (*Close, error)
 	Exec(context.Context, *ExecRequest) (*ExecResponse, error)
+	KVU(context.Context, *KVURequest) (*KVUResponse, error)
 	Change(context.Context, *ChangeRequest) (*Close, error)
 	Notice(context.Context, *NoticeRequest) (*Close, error)
 }
@@ -222,6 +233,9 @@ func (UnimplementedDiscoveryServer) FireEvent(context.Context, *EventRequest) (*
 }
 func (UnimplementedDiscoveryServer) Exec(context.Context, *ExecRequest) (*ExecResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Exec not implemented")
+}
+func (UnimplementedDiscoveryServer) KVU(context.Context, *KVURequest) (*KVUResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method KVU not implemented")
 }
 func (UnimplementedDiscoveryServer) Change(context.Context, *ChangeRequest) (*Close, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Change not implemented")
@@ -401,6 +415,24 @@ func _Discovery_Exec_Handler(srv interface{}, ctx context.Context, dec func(inte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Discovery_KVU_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(KVURequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DiscoveryServer).KVU(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.Discovery/KVU",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DiscoveryServer).KVU(ctx, req.(*KVURequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Discovery_Change_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ChangeRequest)
 	if err := dec(in); err != nil {
@@ -467,6 +499,10 @@ var Discovery_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Exec",
 			Handler:    _Discovery_Exec_Handler,
+		},
+		{
+			MethodName: "KVU",
+			Handler:    _Discovery_KVU_Handler,
 		},
 		{
 			MethodName: "Change",

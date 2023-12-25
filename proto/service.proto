@@ -116,21 +116,31 @@ message APIResponse{
   string host = 5;
 }
 
+message KVURequest{
+  string key = 1;
+  string value = 2;
+  string action = 3;
+  string from = 4;
+}
+message KVUResponse{
+  string error = 1;
+}
 
 
 service Discovery {
-  rpc GetInfo(EmptyRequest) returns (InfoResponse);
-  rpc Connect(stream ConnectMessage) returns (stream ConnectBackMessage); // child -> parent
-  rpc Ping(PingRequest) returns (PongResponse);
-  rpc Call(CallRequest) returns (CallResponse);
+  rpc GetInfo(EmptyRequest) returns (InfoResponse); // server information
+  rpc Connect(stream ConnectMessage) returns (stream ConnectBackMessage); // stream connection between child and parent
+  rpc Ping(PingRequest) returns (PongResponse); // ping any client/server
+  rpc Call(CallRequest) returns (CallResponse); // call all client/server
+  
+  rpc CallAPI(APIRequest) returns (APIResponse); // call api on any 
+  rpc SendFile(stream SendFileRequest) returns (SendFileReponse); // send file on any
+  rpc FireEvent(EventRequest) returns (Close); // fire event on any 
+  rpc Exec(ExecRequest) returns (ExecResponse); // execute shell command on any 
+  rpc KVU(KVURequest) returns (KVUResponse); // update key/value pair on any
 
-  rpc CallAPI(APIRequest) returns (APIResponse);
-  rpc SendFile(stream SendFileRequest) returns (SendFileReponse);
-  rpc FireEvent(EventRequest) returns (Close);
-  rpc Exec(ExecRequest) returns (ExecResponse);
-
-  rpc Change(ChangeRequest) returns (Close);
-  rpc Notice(NoticeRequest) returns (Close);
+  rpc Change(ChangeRequest) returns (Close); // send from client/server to leader
+  rpc Notice(NoticeRequest) returns (Close);// send from server/leader to childs
 }
 
 // ================== Client Proxy Service ================

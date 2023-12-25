@@ -10,6 +10,7 @@ import (
 	"github.com/mrtdeh/centor/pkg/config"
 	"github.com/mrtdeh/centor/pkg/envoy"
 	grpc_server "github.com/mrtdeh/centor/pkg/grpc/server"
+	"github.com/mrtdeh/centor/pkg/kive"
 	pluginManager "github.com/mrtdeh/centor/plugins"
 	PluginKits "github.com/mrtdeh/centor/plugins/assets"
 	"github.com/mrtdeh/centor/routers"
@@ -22,6 +23,10 @@ func main() {
 
 	// load configurations
 	cnf := config.LoadConfiguration()
+
+	kive.Init(kive.Config{
+		ServerHandler: &grpc_server.KVHandler{},
+	})
 
 	var serversAddrs []string
 	sd := cnf.ServersAddr
