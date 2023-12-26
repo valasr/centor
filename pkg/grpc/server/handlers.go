@@ -48,6 +48,11 @@ func (h *CoreHandlers) GetMyId() string {
 	return h.agent.id
 }
 
+func (h *CoreHandlers) GetMyDC() string {
+	h.WaitForReady(context.Background())
+	return h.agent.dc
+}
+
 func (h *CoreHandlers) GetParentId() string {
 	h.WaitForReady(context.Background())
 	if h.agent.parent != nil {

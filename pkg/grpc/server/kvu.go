@@ -141,7 +141,7 @@ func (a *agent) KVU(ctx context.Context, req *proto.KVURequest) (*proto.KVURespo
 	var err error
 
 	if req.Action == "add" {
-		kv, err = kive.Put(req.Namespace, req.Key, req.Value, req.Timestamp)
+		kv, err = kive.Put(a.dc, req.Namespace, req.Key, req.Value, req.Timestamp)
 		if err != nil {
 			return &proto.KVUResponse{
 				Error: err.Error(),

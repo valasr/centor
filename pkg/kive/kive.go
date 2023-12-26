@@ -25,7 +25,10 @@ func init() {
 // 	Sync(PublishRequest)
 // }
 
-type KVMapList map[string]PublishRequest
+type KVMapList struct {
+	Data map[string]PublishRequest
+	DC   string
+}
 type KiveDB struct {
 	DataMap map[string]KVMapList `json:"db"`
 	// ServerHandler KiveServerInterface
@@ -72,16 +75,16 @@ func Del(ns, key string, ts int64) (*PublishRequest, error) {
 	var n KVMapList
 	var ok bool
 	if n, ok = db.DataMap[ns]; ok {
-		if kv, ok = n[key]; ok {
+		if kv, ok = n.Data[key]; ok {
 			currentTs := kv.PublishDate.Unix()
 			if ts < currentTs {
 				return nil, fmt.Errorf("your opration is outdated : delete %s", key)
 			}
 
 			kv.Action = "delete"
-			n[key] = kv
+			n.Data[key] = kv
 		}
-		delete(db.DataMap[ns], key)
+		delete(db.DataMap[ns].Data, key)
 	} else {
 		return nil, fmt.Errorf("namespace %s is not", ns)
 	}
@@ -89,7 +92,7 @@ func Del(ns, key string, ts int64) (*PublishRequest, error) {
 	return &kv, nil
 }
 
-func Put(ns, key, value string, ts int64) (*PublishRequest, error) {
+func Put(dc, ns, key, value string, ts int64) (*PublishRequest, error) {
 	db.m.Lock()
 	defer db.m.Unlock()
 	id := generateHash(key)
@@ -97,10 +100,13 @@ func Put(ns, key, value string, ts int64) (*PublishRequest, error) {
 	var ok bool
 
 	if n, ok = db.DataMap[ns]; !ok {
-		db.DataMap[ns] = KVMapList{}
+		db.DataMap[ns] = KVMapList{
+			Data: map[string]PublishRequest{},
+			DC:   dc,
+		}
 	}
 
-	if kv, ok := n[key]; ok {
+	if kv, ok := n.Data[key]; ok {
 		currentTs := kv.PublishDate.Unix()
 		if ts < currentTs {
 			return nil, fmt.Errorf("your opration is outdated : update %s", key)
@@ -118,7 +124,7 @@ func Put(ns, key, value string, ts int64) (*PublishRequest, error) {
 		Action:    "add",
 		Namespace: ns,
 	}
-	db.DataMap[ns][key] = kv
+	db.DataMap[ns].Data[key] = kv
 
 	// jsonData, err := json.Marshal(db.Data)
 	// if err != nil {
@@ -143,7 +149,7 @@ func Get(ns, key string) (any, error) {
 	defer db.m.RUnlock()
 
 	if n, ok := db.DataMap[ns]; ok {
-		if kv, ok := n[key]; ok {
+		if kv, ok := n.Data[key]; ok {
 			return kv.Record.Value, nil
 		}
 	} else {

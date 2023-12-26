@@ -21,7 +21,8 @@ func PutKV(c *gin.Context) {
 		return
 	}
 	ts := time.Now().Unix()
-	kv, err := kive.Put(kvr.Namespace, kvr.Key, kvr.Value, ts)
+	dc := h.GetMyDC()
+	kv, err := kive.Put(dc, kvr.Namespace, kvr.Key, kvr.Value, ts)
 	if err != nil {
 		c.JSON(500, gin.H{"error": err.Error()})
 		return
