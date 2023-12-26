@@ -21,14 +21,15 @@ func init() {
 	}
 }
 
-type KiveServerInterface interface {
-	Sync(PublishRequest)
-}
+// type KiveServerInterface interface {
+// 	Sync(PublishRequest)
+// }
+
 type KVMapList map[string]PublishRequest
 type KiveDB struct {
-	DataMap       map[string]KVMapList `json:"db"`
-	ServerHandler KiveServerInterface
-	m             sync.RWMutex
+	DataMap map[string]KVMapList `json:"db"`
+	// ServerHandler KiveServerInterface
+	m sync.RWMutex
 }
 
 type PublishRequest struct {
