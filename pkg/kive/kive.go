@@ -60,26 +60,36 @@ func LoadDB() error {
 		return err
 	}
 
-	fmt.Printf("data : %+v", db.Data)
-
 	return nil
 }
-func Del(id string) (*PublishRequest, error) {
+func Del(key string, ts int64) (*PublishRequest, error) {
 	db.m.Lock()
 	defer db.m.Unlock()
 	var kv PublishRequest
 	var ok bool
-	if kv, ok = db.Data[id]; ok {
+	if kv, ok = db.Data[key]; ok {
+		currentTs := kv.PublishDate.Unix()
+		if ts < currentTs {
+			return nil, fmt.Errorf("your opration is outdated : delete %s", key)
+		}
+
 		kv.Action = "delete"
 	}
-	delete(db.Data, id)
+	delete(db.Data, key)
 	return &kv, nil
 }
 
-func Put(key, value string) (*PublishRequest, error) {
+func Put(key, value string, ts int64) (*PublishRequest, error) {
 	db.m.Lock()
 	defer db.m.Unlock()
 	id := generateHash(key)
+
+	if r, ok := db.Data[key]; ok {
+		currentTs := r.PublishDate.Unix()
+		if ts < currentTs {
+			return nil, fmt.Errorf("your opration is outdated : update %s", key)
+		}
+	}
 
 	kv := PublishRequest{
 		Id:          id,

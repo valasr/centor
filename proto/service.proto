@@ -121,6 +121,7 @@ message KVURequest{
   string value = 2;
   string action = 3;
   string from = 4;
+  int64 timestamp = 5;
 }
 message KVUResponse{
   string error = 1;

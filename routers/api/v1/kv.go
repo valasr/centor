@@ -1,6 +1,8 @@
 package api_v1
 
 import (
+	"time"
+
 	"github.com/gin-gonic/gin"
 	grpc_server "github.com/mrtdeh/centor/pkg/grpc/server"
 	"github.com/mrtdeh/centor/pkg/kive"
@@ -17,8 +19,8 @@ func PutKV(c *gin.Context) {
 		c.JSON(400, gin.H{"error": "invalid input data"})
 		return
 	}
-
-	kv, err := kive.Put(kvr.Key, kvr.Value)
+	ts := time.Now().Unix()
+	kv, err := kive.Put(kvr.Key, kvr.Value, ts)
 	if err != nil {
 		c.JSON(500, gin.H{"error": err.Error()})
 		return
@@ -44,7 +46,8 @@ func GetKV(c *gin.Context) {
 func DeleteKV(c *gin.Context) {
 	key := c.Param("key")
 
-	kv, err := kive.Del(key)
+	ts := time.Now().Unix()
+	kv, err := kive.Del(key, ts)
 	if err != nil {
 		c.JSON(500, gin.H{"error": err.Error()})
 		return

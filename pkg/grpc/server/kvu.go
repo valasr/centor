@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"sync"
+	"time"
 
 	"github.com/mrtdeh/centor/pkg/kive"
 	"github.com/mrtdeh/centor/proto"
@@ -19,10 +20,11 @@ func Sync(pr kive.PublishRequest, from string) {
 	}
 
 	k := KVPool{
-		Key:    pr.Record.Key,
-		Value:  pr.Record.Value,
-		Action: pr.Action,
-		From:   from,
+		Key:       pr.Record.Key,
+		Value:     pr.Record.Value,
+		Action:    pr.Action,
+		Timestamp: pr.PublishDate,
+		From:      from,
 	}
 	go kvm.SendKVtoAll(app, &k)
 }
@@ -34,6 +36,7 @@ type KVPool struct {
 	LastError string
 	Action    string
 	From      string
+	Timestamp time.Time
 	done      bool
 }
 
@@ -42,12 +45,9 @@ type KVPoolManager struct {
 	l     sync.RWMutex
 }
 
-var kvm = &KVPoolManager{
-	pools: make(map[string]*KVPool),
-}
-
-func GetKVManager() *KVPoolManager {
-	return kvm
+func (m *KVPoolManager) addPool(kvp *KVPool) {
+	kvp.Timestamp = time.Now()
+	m.pools[kvp.TargetId] = kvp
 }
 
 func (m *KVPoolManager) SendKVtoAll(a *agent, kvp *KVPool) error {
@@ -60,7 +60,7 @@ func (m *KVPoolManager) SendKVtoAll(a *agent, kvp *KVPool) error {
 			err := sendKVtoParent(a, kvp)
 			if err != nil {
 				kvp.TargetId = tid
-				m.pools[tid] = kvp
+				m.addPool(kvp)
 				return nil
 			}
 		}
@@ -74,7 +74,7 @@ func (m *KVPoolManager) SendKVtoAll(a *agent, kvp *KVPool) error {
 				if err != nil {
 					log.Println("error in send kv to child : ", err)
 					kvp.TargetId = tid
-					m.pools[tid] = kvp
+					m.addPool(kvp)
 					return err
 				}
 			}
@@ -84,16 +84,25 @@ func (m *KVPoolManager) SendKVtoAll(a *agent, kvp *KVPool) error {
 	return nil
 }
 
+var kvm = &KVPoolManager{
+	pools: make(map[string]*KVPool),
+}
+
+func GetKVManager() *KVPoolManager {
+	return kvm
+}
+
 func sendKVtoChild(a *agent, c *child, kvp *KVPool) error {
 
 	if c.status != StatusConnected {
 		return errors.New("status is not connected")
 	}
 	res, err := c.proto.KVU(context.Background(), &proto.KVURequest{
-		Key:    kvp.Key,
-		Value:  kvp.Value,
-		Action: kvp.Action,
-		From:   a.id,
+		Key:       kvp.Key,
+		Value:     kvp.Value,
+		Action:    kvp.Action,
+		Timestamp: kvp.Timestamp.Unix(),
+		From:      a.id,
 	})
 	if err != nil {
 		return err
@@ -107,9 +116,11 @@ func sendKVtoChild(a *agent, c *child, kvp *KVPool) error {
 
 func sendKVtoParent(a *agent, kvp *KVPool) error {
 	res, err := a.parent.proto.KVU(context.Background(), &proto.KVURequest{
-		Key:    kvp.Key,
-		Value:  kvp.Value,
-		Action: kvp.Action,
+		Key:       kvp.Key,
+		Value:     kvp.Value,
+		Action:    kvp.Action,
+		Timestamp: kvp.Timestamp.Unix(),
+		From:      kvp.From,
 	})
 	if err != nil {
 		return err
@@ -126,14 +137,14 @@ func (a *agent) KVU(ctx context.Context, req *proto.KVURequest) (*proto.KVURespo
 	var err error
 
 	if req.Action == "add" {
-		kv, err = kive.Put(req.Key, req.Value)
+		kv, err = kive.Put(req.Key, req.Value, req.Timestamp)
 		if err != nil {
 			return &proto.KVUResponse{
 				Error: err.Error(),
 			}, nil
 		}
 	} else if req.Action == "delete" {
-		kv, err = kive.Del(req.Key)
+		kv, err = kive.Del(req.Key, req.Timestamp)
 		if err != nil {
 			return &proto.KVUResponse{
 				Error: err.Error(),
