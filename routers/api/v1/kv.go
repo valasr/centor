@@ -42,7 +42,7 @@ func GetKV(c *gin.Context) {
 		return
 	}
 
-	c.JSON(200, gin.H{"status": "ok", "result": res})
+	c.JSON(200, gin.H{"result": res})
 }
 
 func DeleteKV(c *gin.Context) {
