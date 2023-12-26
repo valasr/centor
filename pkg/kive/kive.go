@@ -17,15 +17,16 @@ var db *KiveDB
 
 func init() {
 	db = &KiveDB{
-		Data: make(map[string]PublishRequest),
+		DataMap: make(map[string]KVMapList),
 	}
 }
 
 type KiveServerInterface interface {
 	Sync(PublishRequest)
 }
+type KVMapList map[string]PublishRequest
 type KiveDB struct {
-	Data          map[string]PublishRequest `json:"data"`
+	DataMap       map[string]KVMapList `json:"db"`
 	ServerHandler KiveServerInterface
 	m             sync.RWMutex
 }
@@ -37,6 +38,7 @@ type PublishRequest struct {
 	Release     int       `json:"release"` // 1 : in-hard, 2 : in-cluster, 4 :
 	Record      KV        `json:"record"`
 	Action      string    `json:"action"`
+	Namespace   string    `json:"namespace"`
 }
 
 type KV struct {
@@ -62,30 +64,43 @@ func LoadDB() error {
 
 	return nil
 }
-func Del(key string, ts int64) (*PublishRequest, error) {
+func Del(ns, key string, ts int64) (*PublishRequest, error) {
 	db.m.Lock()
 	defer db.m.Unlock()
 	var kv PublishRequest
+	var n KVMapList
 	var ok bool
-	if kv, ok = db.Data[key]; ok {
-		currentTs := kv.PublishDate.Unix()
-		if ts < currentTs {
-			return nil, fmt.Errorf("your opration is outdated : delete %s", key)
-		}
+	if n, ok = db.DataMap[ns]; ok {
+		if kv, ok = n[key]; ok {
+			currentTs := kv.PublishDate.Unix()
+			if ts < currentTs {
+				return nil, fmt.Errorf("your opration is outdated : delete %s", key)
+			}
 
-		kv.Action = "delete"
+			kv.Action = "delete"
+			n[key] = kv
+		}
+		delete(db.DataMap[ns], key)
+	} else {
+		return nil, fmt.Errorf("namespace %s is not", ns)
 	}
-	delete(db.Data, key)
+
 	return &kv, nil
 }
 
-func Put(key, value string, ts int64) (*PublishRequest, error) {
+func Put(ns, key, value string, ts int64) (*PublishRequest, error) {
 	db.m.Lock()
 	defer db.m.Unlock()
 	id := generateHash(key)
+	var n KVMapList
+	var ok bool
 
-	if r, ok := db.Data[key]; ok {
-		currentTs := r.PublishDate.Unix()
+	if n, ok = db.DataMap[ns]; !ok {
+		db.DataMap[ns] = KVMapList{}
+	}
+
+	if kv, ok := n[key]; ok {
+		currentTs := kv.PublishDate.Unix()
 		if ts < currentTs {
 			return nil, fmt.Errorf("your opration is outdated : update %s", key)
 		}
@@ -99,9 +114,10 @@ func Put(key, value string, ts int64) (*PublishRequest, error) {
 			Key:   key,
 			Value: value,
 		},
-		Action: "add",
+		Action:    "add",
+		Namespace: ns,
 	}
-	db.Data[key] = kv
+	db.DataMap[ns][key] = kv
 
 	// jsonData, err := json.Marshal(db.Data)
 	// if err != nil {
@@ -121,12 +137,16 @@ func Put(key, value string, ts int64) (*PublishRequest, error) {
 
 }
 
-func Get(key string) (any, error) {
+func Get(ns, key string) (any, error) {
 	db.m.RLock()
 	defer db.m.RUnlock()
 
-	if r, ok := db.Data[key]; ok {
-		return r.Record.Value, nil
+	if n, ok := db.DataMap[ns]; ok {
+		if kv, ok := n[key]; ok {
+			return kv.Record.Value, nil
+		}
+	} else {
+		return nil, fmt.Errorf("namespace %s is not", ns)
 	}
 
 	return nil, fmt.Errorf("key not found: %s", key)

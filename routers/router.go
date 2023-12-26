@@ -27,8 +27,8 @@ func InitRouter() *gin.Engine {
 	r.GET("/nodes", api_v1.GetNodes)
 
 	r.PUT("/kv", api_v1.PutKV)
-	r.DELETE("/kv/:key", api_v1.DeleteKV)
-	r.GET("/kv/:key", api_v1.GetKV)
+	r.DELETE("/kv/:ns/:key", api_v1.DeleteKV)
+	r.GET("/kv/:ns/:key", api_v1.GetKV)
 
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 

@@ -24,12 +24,14 @@ func Sync(pr kive.PublishRequest, from string) {
 		Value:     pr.Record.Value,
 		Action:    pr.Action,
 		Timestamp: pr.PublishDate,
+		Namespace: pr.Namespace,
 		From:      from,
 	}
 	go kvm.SendKVtoAll(app, &k)
 }
 
 type KVPool struct {
+	Namespace string
 	Key       string
 	Value     string
 	TargetId  string
@@ -73,8 +75,8 @@ func (m *KVPoolManager) SendKVtoAll(a *agent, kvp *KVPool) error {
 				err := sendKVtoChild(a, c, kvp)
 				if err != nil {
 					log.Println("error in send kv to child : ", err)
-					kvp.TargetId = tid
-					m.addPool(kvp)
+					// kvp.TargetId = tid
+					// m.addPool(kvp)
 					return err
 				}
 			}
@@ -101,6 +103,7 @@ func sendKVtoChild(a *agent, c *child, kvp *KVPool) error {
 		Key:       kvp.Key,
 		Value:     kvp.Value,
 		Action:    kvp.Action,
+		Namespace: kvp.Namespace,
 		Timestamp: kvp.Timestamp.Unix(),
 		From:      a.id,
 	})
@@ -119,6 +122,7 @@ func sendKVtoParent(a *agent, kvp *KVPool) error {
 		Key:       kvp.Key,
 		Value:     kvp.Value,
 		Action:    kvp.Action,
+		Namespace: kvp.Namespace,
 		Timestamp: kvp.Timestamp.Unix(),
 		From:      kvp.From,
 	})
@@ -137,14 +141,14 @@ func (a *agent) KVU(ctx context.Context, req *proto.KVURequest) (*proto.KVURespo
 	var err error
 
 	if req.Action == "add" {
-		kv, err = kive.Put(req.Key, req.Value, req.Timestamp)
+		kv, err = kive.Put(req.Namespace, req.Key, req.Value, req.Timestamp)
 		if err != nil {
 			return &proto.KVUResponse{
 				Error: err.Error(),
 			}, nil
 		}
 	} else if req.Action == "delete" {
-		kv, err = kive.Del(req.Key, req.Timestamp)
+		kv, err = kive.Del(req.Namespace, req.Key, req.Timestamp)
 		if err != nil {
 			return &proto.KVUResponse{
 				Error: err.Error(),
