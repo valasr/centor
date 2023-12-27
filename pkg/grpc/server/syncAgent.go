@@ -16,23 +16,25 @@ const (
 
 func (a *agent) syncAgentChange(ca *agent, action int32) error {
 	ni := NodeInfo{
-		Id:         ca.id,
-		Address:    ca.addr,
-		IsServer:   ca.isServer,
-		IsLeader:   ca.isLeader,
-		IsPrimary:  ca.isPrimary,
+		Id:       ca.id,
+		Address:  ca.addr,
+		IsServer: ca.isServer,
+		IsLeader: ca.isLeader,
+		// IsPrimary:  ca.isPrimary,
 		DataCenter: ca.dc,
 		ParentId:   ca.parent.id,
 	}
 	// if is leader then apply changes
 	if a.isLeader {
-		err := a.applyChange(ni, action)
+		err := a.applyChangeToChilds(ni, action)
 		if err != nil {
 			return fmt.Errorf("error in applyChange : %s", err.Error())
 		}
 	}
-	// and if also is not primary then send change to primary
-	if !a.isPrimary {
+
+	// and if also is sub cluster then send change to top level cluster(primary cluster)
+	// TODO: need to improved stability
+	if a.isSubCluster {
 		var try int
 		for {
 			if try >= MaxApplyTries {

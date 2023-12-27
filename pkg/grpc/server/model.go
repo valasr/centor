@@ -6,14 +6,15 @@ import (
 )
 
 type agent struct {
-	id        string // id of the agent
-	addr      string // address of this node
-	dc        string // datacenter of this node
-	isServer  bool   // is this node a server or not
-	isLeader  bool   // is this node leader or not
-	isPrimary bool   // is this node primary server or not
-	isReady   bool   // is this node ready or not
-	weight    int    // weight of this node in the cluster
+	id       string // id of the agent
+	addr     string // address of this node
+	dc       string // datacenter of this node
+	isServer bool   // is this node a server or not
+	isLeader bool   // is this node leader or not
+	// isPrimary bool   // is this node primary server or not
+	isSubCluster bool // is this node
+	isReady      bool // is this node ready or not
+	weight       int  // weight of this node in the cluster
 
 	parent *parent           // parent of this node in the cluster or in primary cluster
 	childs map[string]*child // childs of this node in the cluster

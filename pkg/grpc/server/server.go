@@ -40,9 +40,9 @@ func Start(cnf Config) error {
 		isLeader: cnf.IsLeader,
 	}
 
-	if cnf.IsLeader && len(cnf.Primaries) == 0 {
+	if !cnf.IsLeader || len(cnf.Primaries) > 0 {
 		// if this node is a leader and no primaries are specified, this node becomes primary
-		app.isPrimary = true
+		app.isSubCluster = true
 	}
 
 	var servers []string
@@ -55,11 +55,11 @@ func Start(cnf Config) error {
 		// add current node info to nodes info map
 		cluster.UpdateNodes([]NodeInfo{
 			{
-				Id:         app.id,
-				Address:    app.addr,
-				IsServer:   app.isServer,
-				IsLeader:   app.isLeader,
-				IsPrimary:  app.isPrimary,
+				Id:       app.id,
+				Address:  app.addr,
+				IsServer: app.isServer,
+				IsLeader: app.isLeader,
+				// IsPrimary:  app.isPrimary,
 				DataCenter: app.dc,
 			},
 		})

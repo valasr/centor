@@ -13,7 +13,7 @@ const (
 	ChangeActionRemove
 )
 
-func (a *agent) applyChange(ni NodeInfo, action int32) error {
+func (a *agent) applyChangeToChilds(ni NodeInfo, action int32) error {
 	id := ni.Id
 	if id == "" {
 		return fmt.Errorf("id is empty, must be exist")

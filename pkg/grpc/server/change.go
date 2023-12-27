@@ -15,13 +15,13 @@ var (
 
 type (
 	NodeInfo struct {
-		Id         string `json:"id"`
-		Name       string `json:"name"`
-		Address    string `json:"address"`
-		Port       string `json:"port"`
-		IsServer   bool   `json:"is_server"`
-		IsLeader   bool   `json:"is_leader"`
-		IsPrimary  bool   `json:"is_primary"`
+		Id       string `json:"id"`
+		Name     string `json:"name"`
+		Address  string `json:"address"`
+		Port     string `json:"port"`
+		IsServer bool   `json:"is_server"`
+		IsLeader bool   `json:"is_leader"`
+		// IsPrimary  bool   `json:"is_primary"`
 		ParentId   string `json:"parent_id"`
 		DataCenter string `json:"data_center"`
 	}
@@ -85,13 +85,13 @@ func (a *agent) Change(ctx context.Context, req *proto.ChangeRequest) (*proto.Cl
 		}
 
 		err = a.syncAgentChange(&agent{
-			id:        ni.Id,
-			addr:      ni.Address,
-			isServer:  ni.IsServer,
-			isLeader:  ni.IsLeader,
-			isPrimary: ni.IsPrimary,
-			dc:        ni.DataCenter,
-			parent:    &parent{agent: agent{id: ni.ParentId}},
+			id:       ni.Id,
+			addr:     ni.Address,
+			isServer: ni.IsServer,
+			isLeader: ni.IsLeader,
+			// isPrimary: ni.IsPrimary,
+			dc:     ni.DataCenter,
+			parent: &parent{agent: agent{id: ni.ParentId}},
 		}, nch.Action)
 		if err != nil {
 			return c, err
