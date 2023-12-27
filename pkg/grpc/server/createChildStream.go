@@ -26,7 +26,7 @@ func (a *agent) CreatechildStream(c *child, done chan bool) error {
 
 		done <- true
 		// run health check conenction for this child
-		go connHealthCheck(&cc.stream, time.Second*2)
+		go connHealthCheck(&cc.stream, time.Second*5)
 	} else {
 		return fmt.Errorf("child you want to check not exist")
 	}

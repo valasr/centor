@@ -16,17 +16,6 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-func (a *agent) checkparent() {
-	for {
-		status := a.parent.conn.GetState()
-		if status != connectivity.Ready {
-			a.parent.stream.err <- fmt.Errorf("error parent connection status : %s", status)
-			return
-		}
-		time.Sleep(time.Second * 2)
-	}
-}
-
 func (a *agent) parentErr() <-chan error {
 	return a.parent.stream.err
 }
@@ -38,14 +27,6 @@ func (c *child) childErr() <-chan error {
 }
 
 // ======================================
-func (a *agent) waitForReady() {
-	for {
-		if a.isReady {
-			return
-		}
-		time.Sleep(time.Second)
-	}
-}
 
 func (a *agent) ready() {
 	a.isReady = true

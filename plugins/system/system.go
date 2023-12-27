@@ -80,7 +80,7 @@ func (p *PluginProvider) Run() {
 			fmt.Println(err)
 		}
 
-		time.Sleep(time.Second * 1)
+		time.Sleep(time.Second * 5)
 		i++
 	}
 }

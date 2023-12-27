@@ -70,7 +70,7 @@ func (a *agent) ConnectToParent(cc connectConfig) error {
 	}()
 
 	// health check conenction for parent server
-	go connHealthCheck(&a.parent.stream, time.Second*2)
+	go connHealthCheck(&a.parent.stream, time.Second*5)
 
 	return <-a.parent.stream.err
 }
