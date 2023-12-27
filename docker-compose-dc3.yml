@@ -1,0 +1,98 @@
+version: '3'
+
+services:
+  centor-server-3-1:
+    image: mrtdeh/centor
+    command: --api
+    networks:
+      - cluster
+    environment:
+      - NAME=ahmad
+      - DC=dc3
+      - PORT=3000
+      - SERVER=true
+      - LEADER=true
+      - ALTERNATIVE_HOST=centor-server-3-1
+      - PRIMARIES=centor-server-1-1:3000
+    ports:
+      - "9993:9090"
+
+  centor-server-3-2:
+    image: mrtdeh/centor
+    networks:
+      - cluster
+    environment:
+      - NAME=amin
+      - DC=dc3
+      - PORT=3002
+      - SERVER=true
+      - JOIN=centor-server-3-1:3000
+      - ALTERNATIVE_HOST=centor-server-3-2
+      - PRIMARIES=centor-server-1-1:3000
+   
+
+
+  centor-client-3-1:
+    image: mrtdeh/centor
+    networks:
+      - cluster
+    environment:
+      - NAME=client-3-1
+      - DC=dc3
+      - PORT=4001
+      - JOIN=centor-server-3-1:3000,centor-server-3-2:3002
+      - ALTERNATIVE_HOST=centor-client-3-1
+    depends_on:
+      - centor-server-3-1   
+      - centor-server-3-2   
+
+  centor-client-3-2:
+    image: mrtdeh/centor
+    networks:
+      - cluster
+    environment:
+      - NAME=client-3-2
+      - DC=dc3
+      - PORT=4002
+      - JOIN=centor-server-3-1:3000,centor-server-3-2:3002
+      - ALTERNATIVE_HOST=centor-client-3-2
+    depends_on:
+      - centor-server-3-1   
+      - centor-server-3-2  
+ 
+
+  centor-client-3-3:
+    image: mrtdeh/centor
+    networks:
+      - cluster
+    environment:
+      - NAME=client-3-3
+      - DC=dc3
+      - PORT=4003
+      - JOIN=centor-server-3-1:3000,centor-server-3-2:3002
+      - ALTERNATIVE_HOST=centor-client-3-3
+    depends_on:
+      - centor-server-3-1   
+      - centor-server-3-2  
+
+  centor-client-3-4:
+    image: mrtdeh/centor
+    networks:
+      - cluster
+    environment:
+      - NAME=client-3-4
+      - DC=dc3
+      - PORT=4004
+      - JOIN=centor-server-3-1:3000,centor-server-3-2:3002
+      - ALTERNATIVE_HOST=centor-client-3-4
+    depends_on:
+      - centor-server-3-1   
+      - centor-server-3-2  
+   
+
+networks:
+  cluster:
+    name: centor_network
+    # Use a custom driver
+    external: true
+      

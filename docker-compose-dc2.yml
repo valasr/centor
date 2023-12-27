@@ -15,7 +15,7 @@ services:
       - ALTERNATIVE_HOST=centor-server-2-1
       - PRIMARIES=centor-server-1-1:3000
     ports:
-      - "9091:9090"
+      - "9992:9090"
 
   centor-server-2-2:
     image: mrtdeh/centor
@@ -28,6 +28,7 @@ services:
       - SERVER=true
       - JOIN=centor-server-2-1:3000
       - ALTERNATIVE_HOST=centor-server-2-2
+      - PRIMARIES=centor-server-1-1:3000
    
 
 

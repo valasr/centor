@@ -21,3 +21,18 @@ And then print help for a more information :
 ```sh
 ./bin/centor -h
 ```
+## Deploy and Test
+1. Build dockerFile :
+```sh
+make docker-build
+```
+2. Running up the clusters mesh :
+```sh
+make docker-run
+```
+3. Test cluster discovery with curl :
+```sh
+# 9991:dc1, 9992:dc2, 9993:dc3, 9994:dc4
+curl http://localhost:9991/nodes
+```
+
