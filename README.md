@@ -32,7 +32,14 @@ make docker-run
 ```
 3. Test cluster discovery with curl :
 ```sh
-# 9991:dc1, 9992:dc2, 9993:dc3, 9994:dc4
+# You can call the following API's from this endpoints:
+# :9991 => dc1, :9992 => dc2, :9993 => dc3, :9994 => dc4
+
+# Ping all connected nodes in the current cluster and subclusters 
+# and then return their names if available.
+curl http://localhost:9991/call
+
+# Display all connected nodes in the current cluster and sub-clusters
 curl http://localhost:9991/nodes
 ```
 
