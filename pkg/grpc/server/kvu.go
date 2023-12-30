@@ -12,11 +12,24 @@ import (
 	"github.com/mrtdeh/centor/proto"
 )
 
-type KVHandler struct{}
+type KVUHandler struct {
+	agent *agent
+}
 
-func Sync(pr kive.PublishRequest, from string) {
+func (a *agent) GetKVUHandler() *KVUHandler {
+	return &KVUHandler{
+		agent: a,
+	}
+}
+func (h *KVUHandler) Sync(pr *kive.PublishRequest, from string) {
+	if pr != nil {
+		go h.agent.sync(*pr, from)
+	}
+}
+
+func (a *agent) sync(pr kive.PublishRequest, from string) {
 	if from == "" {
-		from = app.id
+		from = a.id
 	}
 
 	k := KVPool{
@@ -27,7 +40,7 @@ func Sync(pr kive.PublishRequest, from string) {
 		Namespace: pr.Namespace,
 		From:      from,
 	}
-	go kvm.SendKVtoAll(app, &k)
+	go kvm.SendKVtoAll(a, &k)
 }
 
 type KVPool struct {
@@ -157,7 +170,7 @@ func (a *agent) KVU(ctx context.Context, req *proto.KVURequest) (*proto.KVURespo
 	}
 
 	if kv != nil {
-		go Sync(*kv, req.From)
+		go a.sync(*kv, req.From)
 	}
 	return &proto.KVUResponse{}, nil
 }

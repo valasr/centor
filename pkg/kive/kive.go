@@ -15,24 +15,18 @@ const (
 
 var db *KiveDB
 
-func init() {
-	db = &KiveDB{
-		DataMap: make(map[string]KVMapList),
-	}
+type KiveServerInterface interface {
+	Sync(*PublishRequest, string)
 }
-
-// type KiveServerInterface interface {
-// 	Sync(PublishRequest)
-// }
 
 type KVMapList struct {
 	Data map[string]PublishRequest
 	DC   string
 }
 type KiveDB struct {
-	DataMap map[string]KVMapList `json:"db"`
-	// ServerHandler KiveServerInterface
-	m sync.RWMutex
+	DataMap       map[string]KVMapList `json:"db"`
+	ServerHandler KiveServerInterface
+	m             sync.RWMutex
 }
 
 type PublishRequest struct {
@@ -48,6 +42,14 @@ type PublishRequest struct {
 type KV struct {
 	Key   string `json:"key"`
 	Value string `json:"value"`
+}
+
+func Init(serverHandler KiveServerInterface) error {
+	db = &KiveDB{
+		DataMap:       make(map[string]KVMapList),
+		ServerHandler: serverHandler,
+	}
+	return nil
 }
 
 func LoadDB() error {
@@ -126,22 +128,15 @@ func Put(dc, ns, key, value string, ts int64) (*PublishRequest, error) {
 	}
 	db.DataMap[ns].Data[key] = kv
 
-	// jsonData, err := json.Marshal(db.Data)
-	// if err != nil {
-	// 	return fmt.Errorf("error in marshalling : %s", err)
-	// }
-	// err = os.WriteFile(dbPath, jsonData, 0655)
-	// if err != nil {
-	// 	return fmt.Errorf("error in writing : %s", err)
-	// }
-
-	// if r, ok := db.Data[id]; ok {
-	// 	r.Release += 2
-	// 	db.Data[id] = r
-	// }
-
 	return &kv, nil
+}
 
+func Sync(pr *PublishRequest) error {
+	if db.ServerHandler == nil {
+		return fmt.Errorf("server handler is nil")
+	}
+	db.ServerHandler.Sync(pr, "")
+	return nil
 }
 
 func Get(ns, key string) (any, error) {

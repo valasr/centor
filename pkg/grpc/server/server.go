@@ -17,9 +17,12 @@ type Config struct {
 	IsLeader   bool     // is this node leader or not
 }
 
-var app *agent = &agent{}
+func NewServer() *agent {
+	t := &agent{}
+	return t
+}
 
-func Start(cnf Config) error {
+func (a *agent) Start(cnf Config) error {
 	if cnf.Host == "" {
 		cnf.Host = "127.0.0.1"
 	}
@@ -29,9 +32,8 @@ func Start(cnf Config) error {
 	if cnf.AltHost != "" {
 		host = cnf.AltHost
 	}
-
 	// create default agent instance
-	*app = agent{
+	*a = agent{
 		id:       cnf.Name,
 		dc:       cnf.DataCenter,
 		addr:     fmt.Sprintf("%s:%d", host, cnf.Port),
@@ -42,7 +44,7 @@ func Start(cnf Config) error {
 
 	if !cnf.IsLeader || len(cnf.Primaries) > 0 {
 		// if this node is a leader and no primaries are specified, this node becomes primary
-		app.isSubCluster = true
+		a.isSubCluster = true
 	}
 
 	var servers []string
@@ -55,12 +57,12 @@ func Start(cnf Config) error {
 		// add current node info to nodes info map
 		cluster.UpdateNodes([]NodeInfo{
 			{
-				Id:       app.id,
-				Address:  app.addr,
-				IsServer: app.isServer,
-				IsLeader: app.isLeader,
-				// IsPrimary:  app.isPrimary,
-				DataCenter: app.dc,
+				Id:       a.id,
+				Address:  a.addr,
+				IsServer: a.isServer,
+				IsLeader: a.isLeader,
+				// IsPrimary:  a.isPrimary,
+				DataCenter: a.dc,
 			},
 		})
 
@@ -73,7 +75,7 @@ func Start(cnf Config) error {
 	go func() {
 		for {
 			// try connect to parent server
-			err := app.ConnectToParent(connectConfig{
+			err := a.ConnectToParent(connectConfig{
 				ConnectToPrimary: connectToPrimary,
 				ServersAddresses: servers,
 			})
@@ -86,5 +88,5 @@ func Start(cnf Config) error {
 	}()
 
 	fmt.Println("DataCenter : ", cnf.DataCenter)
-	return app.Listen()
+	return a.Listen()
 }

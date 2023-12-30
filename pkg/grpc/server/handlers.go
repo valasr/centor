@@ -16,9 +16,9 @@ type CoreHandlers struct {
 	agent *agent
 }
 
-func GetAgentHandler() *CoreHandlers {
+func (a *agent) GetCoreHandler() *CoreHandlers {
 	return &CoreHandlers{
-		agent: app,
+		agent: a,
 	}
 }
 
@@ -126,7 +126,7 @@ func (h *CoreHandlers) FireEvent(ctx context.Context, nodeId, event string, para
 
 	// first check node id with parent id
 	if h.agent.isLeader && h.agent.parent != nil && h.agent.parent.id == nodeId {
-		return fire(app.parent.addr)
+		return fire(h.agent.parent.addr)
 	}
 
 	// check if node id is exist in nodes or not

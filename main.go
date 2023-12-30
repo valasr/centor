@@ -10,9 +10,11 @@ import (
 	"github.com/mrtdeh/centor/pkg/config"
 	"github.com/mrtdeh/centor/pkg/envoy"
 	grpc_server "github.com/mrtdeh/centor/pkg/grpc/server"
+	"github.com/mrtdeh/centor/pkg/kive"
 	pluginManager "github.com/mrtdeh/centor/plugins"
 	PluginKits "github.com/mrtdeh/centor/plugins/assets"
 	"github.com/mrtdeh/centor/routers"
+	api_v1 "github.com/mrtdeh/centor/routers/api/v1"
 )
 
 func main() {
@@ -35,13 +37,18 @@ func main() {
 		primariesAddrs = strings.Split(strings.TrimSpace(pd), ",")
 	}
 
+	// create new gRPC server instance
+	app := grpc_server.NewServer()
+
 	// initilize api server
 	router := routers.InitRouter()
+	api_v1.Init(app.GetCoreHandler())
+	kive.Init(app.GetKVUHandler())
 
 	// bootstrap plugins
 	err := pluginManager.Bootstrap(pluginManager.Config{
 		Config: PluginKits.Config{
-			CoreHandler: grpc_server.GetAgentHandler(),
+			CoreHandler: app.GetCoreHandler(),
 			RouterAPI:   router,
 		},
 	})
@@ -84,7 +91,7 @@ func main() {
 	}
 
 	// start gRPC server
-	err = grpc_server.Start(grpc_server.Config{
+	err = app.Start(grpc_server.Config{
 		Name:       cnf.Name,
 		DataCenter: cnf.DataCenter,
 		Host:       cnf.Host,

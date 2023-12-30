@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	grpc_server "github.com/mrtdeh/centor/pkg/grpc/server"
 	"github.com/mrtdeh/centor/pkg/kive"
 )
 
@@ -27,8 +26,10 @@ func PutKV(c *gin.Context) {
 		c.JSON(500, gin.H{"error": err.Error()})
 		return
 	}
-
-	grpc_server.Sync(*kv, "")
+	if err := kive.Sync(kv); err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
 
 	c.JSON(200, gin.H{"status": "ok"})
 }
@@ -57,7 +58,10 @@ func DeleteKV(c *gin.Context) {
 		return
 	}
 
-	grpc_server.Sync(*kv, "")
+	if err := kive.Sync(kv); err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
 
 	c.JSON(200, gin.H{"status": "ok"})
 }
