@@ -1,3 +1,10 @@
+
+<a href="https://github.com/valasr/centor">
+    <img src="https://github.com/valasr/centor/raw/main/logo/banner.png"
+         alt="Centor logo" title="Centor" height="315" width="100%" />
+</a>
+
+---
 # Centor
 Centor (Central Operations Manager) is a distributed and highly available service implemented by the Raft protocol that provides a simple interface for securing, connecting, and monitoring nodes and services in clusters and can be used for different environments such as kubernetes or independent servers can be used.
 
