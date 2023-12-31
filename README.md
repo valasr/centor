@@ -1,6 +1,6 @@
 
 <a href="https://github.com/valasr/centor">
-    <img src="https://github.com/valasr/centor/raw/main/logo/banner.png"
+    <img src="https://github.com/valasr/centor/raw/main/logo/banner.jpg"
          alt="Centor logo" title="Centor" height="315" width="100%" />
 </a>
 
