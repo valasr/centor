@@ -1,5 +1,5 @@
 # Centor
-Centor (Central Operations Manager) is a distributed and highly available service implemented by the Raft protocol that provides a simple interface for securing, connecting, and monitoring nodes and services in clusters and can be used for different environments such as kubernetes or independent servers can be used.
+Centor (Central Operations Management) is a distributed and highly available service implemented by the Raft protocol that provides a simple interface for securing, connecting, and monitoring nodes and services in clusters and can be used for different environments such as kubernetes or independent servers can be used.
 
 ## Features
 - **Multi-Datacenter** : easy to build multi datacenter clusters and create stable connection to gather.
