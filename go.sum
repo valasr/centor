@@ -1,5 +1,3 @@
-github.com/3n0ugh/grpc-test-sample v0.0.0-20220424234331-962772fea8f2 h1:NuXgtTP6TVRFUmfs0u6PF3qaa90tu/+xad8IAUnJE+I=
-github.com/3n0ugh/grpc-test-sample v0.0.0-20220424234331-962772fea8f2/go.mod h1:D8noN1EJOKCgkq2XOJPsnEJEjCqUa2JX4ryyVKznjp4=
 github.com/KyleBanks/depth v1.2.1 h1:5h8fQADFrWtarTdtDudMmGsC7GPbOAu6RVB3ffsVFHc=
 github.com/KyleBanks/depth v1.2.1/go.mod h1:jzSb9d0L43HxTQfT+oSA1EEp2q+ne2uh6XgeJcm8brE=
 github.com/agext/levenshtein v1.2.3 h1:YB2fHEn0UJagG8T1rrWknE3ZQzWM06O8AMAatNn7lmo=
