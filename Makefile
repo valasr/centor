@@ -5,7 +5,7 @@
 all: test build
 
 test:
-	go test ./...
+	go test ./test/*
 
 build: clean
 	go build -v -o bin/centor  ./main.go
@@ -20,9 +20,6 @@ docker-clean:
 	
 docker-build: docker-clean
 	docker build . --tag mrtdeh/centor
-
-docker-build2: docker-clean
-	docker build -f dockerfile-with-envoy . --tag mrtdeh/centor:with-envoy
 docker-up:
 	docker compose -p dc1 -f ./docker-compose-dc1.yml up --force-recreate --build -d
 	docker compose -p dc2 -f ./docker-compose-dc2.yml up --force-recreate -d
@@ -38,6 +35,9 @@ docker-down-all:
 
 
 
+
+docker-build-with-envoy: docker-clean
+	docker build -f dockerfile-with-envoy . --tag mrtdeh/centor:with-envoy
 docker-up-with-envoy:
 	docker compose -f docker-compose-with-envoy.yml -p dc1 up --force-recreate --build -d 
 
