@@ -3,6 +3,7 @@ module github.com/mrtdeh/centor
 go 1.20
 
 require (
+	github.com/3n0ugh/grpc-test-sample v0.0.0-20220424234331-962772fea8f2
 	github.com/asaskevich/EventBus v0.0.0-20200907212545-49d423059eef
 	github.com/common-nighthawk/go-figure v0.0.0-20210622060536-734e95fb86be
 	github.com/gin-gonic/gin v1.9.1

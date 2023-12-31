@@ -17,15 +17,17 @@ type Config struct {
 	IsLeader   bool     // is this node leader or not
 }
 
-func NewServer() *agent {
-	t := &agent{}
-	return t
+func (a *agent) Stop() error {
+	fmt.Println("Stopping agent...")
+	return nil
 }
 
-func (a *agent) Start(cnf Config) error {
+func NewServer(cnf Config) (*agent, error) {
 	if cnf.Host == "" {
 		cnf.Host = "127.0.0.1"
 	}
+
+	a := &agent{}
 
 	// resolve alternative host from config
 	var host string = cnf.Host
@@ -88,5 +90,5 @@ func (a *agent) Start(cnf Config) error {
 	}()
 
 	fmt.Println("DataCenter : ", cnf.DataCenter)
-	return a.Listen()
+	return a, nil
 }

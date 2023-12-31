@@ -38,7 +38,17 @@ func main() {
 	}
 
 	// create new gRPC server instance
-	app := grpc_server.NewServer()
+	app, _ := grpc_server.NewServer(grpc_server.Config{
+		Name:       cnf.Name,
+		DataCenter: cnf.DataCenter,
+		Host:       cnf.Host,
+		AltHost:    cnf.AltHost,
+		Port:       cnf.Port,
+		IsServer:   cnf.IsServer,
+		IsLeader:   cnf.IsLeader,
+		Servers:    serversAddrs,
+		Primaries:  primariesAddrs,
+	})
 
 	// initilize api server
 	router := routers.InitRouter()
@@ -91,18 +101,7 @@ func main() {
 	}
 
 	// start gRPC server
-	err = app.Start(grpc_server.Config{
-		Name:       cnf.Name,
-		DataCenter: cnf.DataCenter,
-		Host:       cnf.Host,
-		AltHost:    cnf.AltHost,
-		Port:       cnf.Port,
-		IsServer:   cnf.IsServer,
-		IsLeader:   cnf.IsLeader,
-		Servers:    serversAddrs,
-		Primaries:  primariesAddrs,
-	})
-	if err != nil {
+	if err := app.Serve(nil); err != nil {
 		log.Fatal(err)
 	}
 
