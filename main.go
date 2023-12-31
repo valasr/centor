@@ -5,8 +5,8 @@ import (
 	"log"
 	"strings"
 
-	"github.com/common-nighthawk/go-figure"
 	api_server "github.com/mrtdeh/centor/pkg/api"
+	"github.com/mrtdeh/centor/pkg/cli"
 	"github.com/mrtdeh/centor/pkg/config"
 	"github.com/mrtdeh/centor/pkg/envoy"
 	grpc_server "github.com/mrtdeh/centor/pkg/grpc/server"
@@ -20,7 +20,7 @@ import (
 func main() {
 
 	// print centor in cli
-	printLogo()
+	cli.PrintLogo()
 
 	// load configurations
 	cnf := config.LoadConfiguration()
@@ -105,10 +105,4 @@ func main() {
 		log.Fatal(err)
 	}
 
-}
-
-func printLogo() {
-	myFigure := figure.NewFigure("CENTOR", "", true)
-	myFigure.Print()
-	fmt.Println()
 }
