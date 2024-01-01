@@ -72,7 +72,7 @@ func TestGetInfo(t *testing.T) {
 			in: &proto.EmptyRequest{},
 			expected: expectation{
 				out: &proto.InfoResponse{
-					// Id: ,
+					Id: "ali",
 				},
 				err: nil,
 			},
@@ -80,24 +80,17 @@ func TestGetInfo(t *testing.T) {
 	}
 
 	for scenario, tt := range tests {
-		log.Println("asdsadas")
-		t.Log("test : ", scenario)
 		t.Run(scenario, func(t *testing.T) {
 			out, err := client.GetInfo(ctx, tt.in)
 			if err != nil {
 				if tt.expected.err.Error() != err.Error() {
 					t.Errorf("Err -> \nWant: %q\nGot: %q\n", tt.expected.err, err)
 				}
+			} else {
+				if tt.expected.out.Id != out.Id {
+					t.Errorf("Out -> \nWant: %q\nGot : %q", tt.expected.out, out)
+				}
 			}
-
-			t.Log("out : ", out.Id)
-			// else {
-			// 	if tt.expected.out.Name != out.Name ||
-			// 		tt.expected.out.Number != out.Number ||
-			// 		tt.expected.out.Lastname != out.Lastname {
-			// 		t.Errorf("Out -> \nWant: %q\nGot : %q", tt.expected.out, out)
-			// 	}
-			// }
 
 		})
 	}

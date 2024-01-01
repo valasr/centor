@@ -6,8 +6,6 @@ import (
 	"math"
 
 	"github.com/mrtdeh/centor/proto"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 )
 
 type ServerInfo struct {
@@ -23,7 +21,9 @@ func bestElect(addrs []string) (*ServerInfo, error) {
 	var si *ServerInfo
 	for i, a := range addrs {
 
-		conn, err := grpc.Dial(a, grpc.WithTransportCredentials(insecure.NewCredentials()))
+		conn, err := grpc_Dial(DialConfig{
+			Address: a,
+		})
 		if err != nil {
 			return nil, fmt.Errorf("error in dial : %s", err.Error())
 		}
@@ -31,7 +31,7 @@ func bestElect(addrs []string) (*ServerInfo, error) {
 		c := proto.NewDiscoveryClient(conn)
 		res, err := c.GetInfo(context.Background(), &proto.EmptyRequest{})
 		if err != nil {
-			fmt.Println("failed to get info from  :", a)
+			fmt.Printf("failed to get info from %s error : %s\n", a, err.Error())
 			continue
 		}
 
@@ -55,7 +55,9 @@ func bestElect(addrs []string) (*ServerInfo, error) {
 func leaderElect(addrs []string) (*ServerInfo, error) {
 	var si *ServerInfo
 	for _, a := range addrs {
-		conn, err := grpc.Dial(a, grpc.WithTransportCredentials(insecure.NewCredentials()))
+		conn, err := grpc_Dial(DialConfig{
+			Address: a,
+		})
 		if err != nil {
 			return nil, fmt.Errorf("error in dial : %s", err.Error())
 		}

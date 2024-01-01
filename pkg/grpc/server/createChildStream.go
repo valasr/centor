@@ -9,7 +9,9 @@ import (
 
 func (a *agent) CreatechildStream(c *child, done chan bool) error {
 	// dial to child listener
-	conn, err := grpc_Dial(c.addr)
+	conn, err := grpc_Dial(DialConfig{
+		Address: c.addr,
+	})
 	if err != nil {
 		return err
 	}

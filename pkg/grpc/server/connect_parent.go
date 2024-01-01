@@ -10,15 +10,13 @@ import (
 
 type connectConfig struct {
 	ServersAddresses []string
-	ConnectToPrimary bool
-	OnFinishChan     chan struct{}
 }
 
-func (a *agent) ConnectToParent(cc connectConfig) error {
-	if len(cc.ServersAddresses) == 0 {
+func (a *agent) ConnectToParent(addrs []string) error {
+	if len(addrs) == 0 {
 		return nil
 	}
-	servers := cc.ServersAddresses
+	servers := addrs
 
 	// master election for servers / best election for clients
 	var si *ServerInfo
@@ -35,7 +33,9 @@ func (a *agent) ConnectToParent(cc connectConfig) error {
 	}
 
 	// dial to selected server
-	conn, err := grpc_Dial(si.Addr)
+	conn, err := grpc_Dial(DialConfig{
+		Address: si.Addr,
+	})
 	if err != nil {
 		return err
 	}

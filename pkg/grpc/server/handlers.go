@@ -63,7 +63,9 @@ func (h *CoreHandlers) GetParentId() string {
 
 func (h *CoreHandlers) CallAPI(ctx context.Context, nodeId, method, addr, body string) (*map[string]interface{}, error) {
 	if n, err := cluster.GetNode(nodeId); err == nil {
-		conn, err := grpc_Dial(n.Address)
+		conn, err := grpc_Dial(DialConfig{
+			Address: n.Address,
+		})
 		if err != nil {
 			return nil, err
 		}
@@ -95,7 +97,9 @@ func (h *CoreHandlers) FireEvent(ctx context.Context, nodeId, event string, para
 	protoParams := []*anypb.Any{}
 
 	var fire = func(addr string) error {
-		conn, err := grpc_Dial(addr)
+		conn, err := grpc_Dial(DialConfig{
+			Address: addr,
+		})
 		if err != nil {
 			return err
 		}
@@ -140,7 +144,9 @@ func (h *CoreHandlers) Exec(ctx context.Context, nodeId, commnad string) (string
 
 	// check if node_id is exist or not
 	if n, err := cluster.GetNode(nodeId); err == nil {
-		conn, err := grpc_Dial(n.Address)
+		conn, err := grpc_Dial(DialConfig{
+			Address: n.Address,
+		})
 		if err != nil {
 			return "", err
 		}
@@ -170,7 +176,9 @@ func (h *CoreHandlers) SendFile(ctx context.Context, nodeId, filename string, da
 
 	// check if node_id is exist or not
 	if n, err := cluster.GetNode(nodeId); err == nil {
-		conn, err := grpc_Dial(n.Address)
+		conn, err := grpc_Dial(DialConfig{
+			Address: n.Address,
+		})
 		if err != nil {
 			return err
 		}

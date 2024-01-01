@@ -50,7 +50,6 @@ func NewServer(cnf Config) (*agent, error) {
 	}
 
 	var servers []string
-	var connectToPrimary bool
 
 	if !cnf.IsLeader && len(cnf.Servers) > 0 {
 		servers = cnf.Servers
@@ -59,17 +58,15 @@ func NewServer(cnf Config) (*agent, error) {
 		// add current node info to nodes info map
 		cluster.UpdateNodes([]NodeInfo{
 			{
-				Id:       a.id,
-				Address:  a.addr,
-				IsServer: a.isServer,
-				IsLeader: a.isLeader,
-				// IsPrimary:  a.isPrimary,
+				Id:         a.id,
+				Address:    a.addr,
+				IsServer:   a.isServer,
+				IsLeader:   a.isLeader,
 				DataCenter: a.dc,
 			},
 		})
 
 		if len(cnf.Primaries) > 0 {
-			connectToPrimary = true
 			servers = cnf.Primaries
 		}
 	}
@@ -77,10 +74,7 @@ func NewServer(cnf Config) (*agent, error) {
 	go func() {
 		for {
 			// try connect to parent server
-			err := a.ConnectToParent(connectConfig{
-				ConnectToPrimary: connectToPrimary,
-				ServersAddresses: servers,
-			})
+			err := a.ConnectToParent(servers)
 			if err != nil {
 				fmt.Println(err.Error())
 			}

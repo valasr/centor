@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net"
 	"time"
 
 	"github.com/golang/protobuf/ptypes/any"
@@ -71,8 +72,19 @@ func connIsFailed(conn *grpc.ClientConn) error {
 }
 
 // =============================================================
-func grpc_Dial(addr string) (*grpc.ClientConn, error) {
-	conn, err := grpc.Dial(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+type DialConfig struct {
+	Address     string
+	DialContext func(context.Context, string) (net.Conn, error)
+}
+
+func grpc_Dial(cnf DialConfig) (*grpc.ClientConn, error) {
+	var opts []grpc.DialOption
+	opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if cnf.DialContext != nil {
+		cnf.Address = ""
+		opts = append(opts, grpc.WithContextDialer(cnf.DialContext))
+	}
+	conn, err := grpc.Dial(cnf.Address, opts...)
 	if err != nil {
 		return nil, fmt.Errorf("error in dial : %s", err.Error())
 	}
