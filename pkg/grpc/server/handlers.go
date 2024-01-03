@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"strings"
-	"time"
 
 	"github.com/mrtdeh/centor/proto"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -31,15 +30,29 @@ type FileHandler struct {
 // wait for current agent is running completely
 func (h *CoreHandlers) WaitForReady(ctx context.Context) error {
 	for {
+		if h.agent.isReady.val {
+			return nil
+		}
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
-		default:
-			if h.agent != nil && h.agent.isReady {
-				return nil
-			}
+		case <-h.agent.isReady.ch:
+			return nil
 		}
-		time.Sleep(time.Millisecond * 100)
+	}
+}
+
+func (h *CoreHandlers) WaitForConnect(ctx context.Context) error {
+	for {
+		if h.agent.isConneted.IsTrue() {
+			return nil
+		}
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-h.agent.isConneted.GetCh():
+			return nil
+		}
 	}
 }
 

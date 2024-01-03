@@ -42,6 +42,9 @@ func NewServer(cnf Config) (*agent, error) {
 		childs:   make(map[string]*child),
 		isServer: cnf.IsServer,
 		isLeader: cnf.IsLeader,
+
+		isReady:    boolChan{ch: make(chan bool, 1)},
+		isConneted: boolChan{ch: make(chan bool, 1)},
 	}
 
 	if !cnf.IsLeader || len(cnf.Primaries) > 0 {

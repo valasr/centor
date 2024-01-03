@@ -29,14 +29,6 @@ func (c *child) childErr() <-chan error {
 
 // ======================================
 
-func (a *agent) ready() {
-	a.isReady = true
-}
-
-func (a *agent) unReady() {
-	a.isReady = false
-}
-
 func (a *agent) Closechild(c *child) error {
 	if _, ok := a.childs[c.id]; !ok {
 		return fmt.Errorf("child %s is not exist", c.id)
