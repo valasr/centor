@@ -4,7 +4,6 @@ import (
 	"context"
 	"log"
 	"testing"
-	"time"
 
 	grpc_server "github.com/mrtdeh/centor/pkg/grpc/server"
 	"github.com/mrtdeh/centor/proto"
@@ -28,6 +27,7 @@ func listenServer(ctx context.Context) {
 			log.Fatal(err)
 		}
 	}()
+	app.GetCoreHandler().WaitForReady(ctx)
 }
 
 func TestConnect(t *testing.T) {
@@ -84,6 +84,7 @@ func TestConnect(t *testing.T) {
 						if len(res.Tags) != 2 {
 							t.Errorf("tags must ne 2 but got %d\n", len(res.Tags))
 						}
+						return
 					}
 
 				}
@@ -92,5 +93,4 @@ func TestConnect(t *testing.T) {
 		})
 	}
 
-	time.Sleep(time.Second * 3)
 }

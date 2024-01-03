@@ -5,7 +5,7 @@
 all: test build
 
 test:
-	go test ./test/*
+	go clean -testcache && go test -v ./test/*
 
 
 docker-test:

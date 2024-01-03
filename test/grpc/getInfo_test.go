@@ -3,19 +3,17 @@ package grpc_test
 import (
 	"context"
 	"log"
-	"net"
 	"testing"
 
 	grpc_server "github.com/mrtdeh/centor/pkg/grpc/server"
 	"github.com/mrtdeh/centor/proto"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
-	"google.golang.org/grpc/test/bufconn"
 )
 
 func server(ctx context.Context) (proto.DiscoveryClient, func()) {
-	buffer := 101024 * 1024
-	lis := bufconn.Listen(buffer)
+	// buffer := 101024 * 1024
+	// lis := bufconn.Listen(buffer)
 
 	app, _ := grpc_server.NewServer(grpc_server.Config{
 		Name:       "ali",
@@ -27,24 +25,27 @@ func server(ctx context.Context) (proto.DiscoveryClient, func()) {
 	})
 
 	go func() {
-		if err := app.Serve(lis); err != nil {
+		if err := app.Serve(nil); err != nil {
 			log.Fatal(err)
 		}
 	}()
 
-	conn, err := grpc.DialContext(ctx, "",
-		grpc.WithContextDialer(func(context.Context, string) (net.Conn, error) {
-			return lis.Dial()
-		}), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	app.GetCoreHandler().WaitForReady(ctx)
+
+	conn, err := grpc.DialContext(ctx, "localhost:3000",
+		// grpc.WithContextDialer(func(context.Context, string) (net.Conn, error) {
+		// 	return lis.Dial()
+		// }),
+		grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Printf("error connecting to server: %v", err)
 	}
 
 	closer := func() {
-		err := lis.Close()
-		if err != nil {
-			log.Printf("error closing listener: %v", err)
-		}
+		// err := lis.Close()
+		// if err != nil {
+		// 	log.Printf("error closing listener: %v", err)
+		// }
 		app.Stop()
 	}
 
@@ -83,12 +84,12 @@ func TestGetInfo(t *testing.T) {
 		t.Run(scenario, func(t *testing.T) {
 			out, err := client.GetInfo(ctx, tt.in)
 			if err != nil {
-				if tt.expected.err.Error() != err.Error() {
-					t.Errorf("Err -> \nWant: %q\nGot: %q\n", tt.expected.err, err)
-				}
+				t.Error("getInfo error :", err)
+
 			} else {
+
 				if tt.expected.out.Id != out.Id {
-					t.Errorf("Out -> \nWant: %q\nGot : %q", tt.expected.out, out)
+					t.Errorf("Out -> \nWant: %v\nGot : %v", tt.expected.out, out)
 				}
 			}
 
