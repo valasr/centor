@@ -7,6 +7,12 @@ all: test build
 test:
 	go test ./test/*
 
+
+docker-test:
+	./scripts/docker-go-test.sh
+
+
+
 build: clean
 	go build -v -o bin/centor  ./main.go
 
