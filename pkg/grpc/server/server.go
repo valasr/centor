@@ -43,8 +43,8 @@ func NewServer(cnf Config) (*agent, error) {
 		isServer: cnf.IsServer,
 		isLeader: cnf.IsLeader,
 
-		isReady:    boolChan{ch: make(chan bool, 1)},
-		isConneted: boolChan{ch: make(chan bool, 1)},
+		isReady:    newBroadcastBool(),
+		isConneted: newBroadcastBool(),
 	}
 
 	if !cnf.IsLeader || len(cnf.Primaries) > 0 {
@@ -75,6 +75,7 @@ func NewServer(cnf Config) (*agent, error) {
 	}
 
 	go func() {
+		a.isReady.WaitForTrue()
 		for {
 			// try connect to parent server
 			err := a.ConnectToParent(servers)

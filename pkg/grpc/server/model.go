@@ -5,24 +5,6 @@ import (
 	"google.golang.org/grpc"
 )
 
-type boolChan struct {
-	ch  chan bool
-	val bool
-}
-
-func (b *boolChan) Set(v bool) {
-	b.val = v
-	b.ch <- v
-}
-
-func (b *boolChan) GetCh() chan bool {
-	return b.ch
-}
-
-func (b *boolChan) IsTrue() bool {
-	return b.val
-}
-
 type agent struct {
 	id       string // id of the agent
 	addr     string // address of this node
@@ -30,10 +12,10 @@ type agent struct {
 	isServer bool   // is this node a server or not
 	isLeader bool   // is this node leader or not
 	// isPrimary bool   // is this node primary server or not
-	isSubCluster bool     // is this node
-	isReady      boolChan // is this node ready or not
-	isConneted   boolChan // is this node connected to parent or not
-	weight       int      // weight of this node in the cluster
+	isSubCluster bool      // is this node
+	isReady      *brodBool // is this node ready or not
+	isConneted   *brodBool // is this node connected to parent or not
+	weight       int       // weight of this node in the cluster
 
 	parent *parent           // parent of this node in the cluster or in primary cluster
 	childs map[string]*child // childs of this node in the cluster

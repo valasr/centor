@@ -2,6 +2,7 @@ package grpc_server
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/mrtdeh/centor/proto"
 )
@@ -16,7 +17,7 @@ func (a *agent) Call(ctx context.Context, req *proto.CallRequest) (*proto.CallRe
 			AgentId: a.id,
 		})
 		if err != nil {
-			return &proto.CallResponse{}, err
+			return &proto.CallResponse{}, fmt.Errorf("failed to call parent %s: %v", a.parent.id, err)
 		}
 		tags = append(tags, res.Tags...)
 	}
@@ -28,7 +29,7 @@ func (a *agent) Call(ctx context.Context, req *proto.CallRequest) (*proto.CallRe
 					AgentId: a.id,
 				})
 				if err != nil {
-					return &proto.CallResponse{}, err
+					return &proto.CallResponse{}, fmt.Errorf("failed to call child %s: %v", c.id, err)
 				}
 				tags = append(tags, res.Tags...)
 			}
