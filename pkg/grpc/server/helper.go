@@ -18,13 +18,13 @@ import (
 )
 
 func (a *agent) parentErr() <-chan error {
-	return a.parent.stream.err
+	return a.parent.clientStream.err
 }
 
 // =======================================
 
 func (c *child) childErr() <-chan error {
-	return c.stream.err
+	return c.clientStream.err
 }
 
 // ======================================
@@ -38,7 +38,7 @@ func (a *agent) Closechild(c *child) error {
 }
 
 // ========================== HEALTH CHECK =========================
-func connHealthCheck(s *stream, d time.Duration) {
+func connHealthCheck(s *clientStream, d time.Duration) {
 	for {
 		if err := connIsFailed(s.conn); err != nil {
 			s.err <- err
@@ -107,7 +107,7 @@ func grpc_Connect(ctx context.Context, a *agent) error {
 		// receive connect message from parent server
 		res, err := stream.Recv()
 		if err != nil {
-			a.parent.stream.err <- err
+			a.parent.clientStream.err <- err
 			if pid != "" {
 				fmt.Printf("Disconnect parent - ID=%s\n", pid)
 			} else {

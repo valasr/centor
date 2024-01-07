@@ -84,14 +84,15 @@ func (a *agent) Change(ctx context.Context, req *proto.ChangeRequest) (*proto.Cl
 			return c, err
 		}
 
-		err = a.syncAgentChange(&agent{
+		err = a.syncAgentChange(&agentInfo{
+
 			id:       ni.Id,
 			addr:     ni.Address,
 			isServer: ni.IsServer,
 			isLeader: ni.IsLeader,
 			// isPrimary: ni.IsPrimary,
 			dc:     ni.DataCenter,
-			parent: &parent{agent: agent{id: ni.ParentId}},
+			parent: &parent{agentInfo: agentInfo{id: ni.ParentId}},
 		}, nch.Action)
 		if err != nil {
 			return c, err

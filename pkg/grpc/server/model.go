@@ -1,27 +1,34 @@
 package grpc_server
 
 import (
+	"net"
+
 	"github.com/mrtdeh/centor/proto"
 	"google.golang.org/grpc"
 )
 
+type agentInfo struct {
+	id       string  // id of the agent
+	addr     string  // address of this node
+	dc       string  // datacenter of this node
+	isServer bool    // is this node a server or not
+	isLeader bool    // is this node leader or not
+	weight   int     // weight of this node in the cluster
+	parent   *parent // parent of this node in the cluster or in primary cluster
+	childs   map[string]*child
+}
 type agent struct {
-	id       string // id of the agent
-	addr     string // address of this node
-	dc       string // datacenter of this node
-	isServer bool   // is this node a server or not
-	isLeader bool   // is this node leader or not
+	agentInfo
 	// isPrimary bool   // is this node primary server or not
 	isSubCluster bool      // is this node
 	isReady      *brodBool // is this node ready or not
 	isConneted   *brodBool // is this node connected to parent or not
-	weight       int       // weight of this node in the cluster
 
-	parent *parent           // parent of this node in the cluster or in primary cluster
-	childs map[string]*child // childs of this node in the cluster
+	listener   net.Listener
+	grpcServer *grpc.Server
 }
 
-type stream struct {
+type clientStream struct {
 	conn  *grpc.ClientConn      // connection to the server
 	proto proto.DiscoveryClient // discovery protocol
 	err   chan error            // channel for error
@@ -29,14 +36,14 @@ type stream struct {
 }
 
 type parent struct {
-	agent  // parent agent information
-	stream // stream of parent server
+	agentInfo    // parent agent information
+	clientStream // stream of parent server
 }
 
 type child struct {
-	agent         // child agent information
-	stream        // stream of the child server
-	status string // status of child in the cluster
+	agentInfo           // child agent information
+	clientStream        // stream of the child server
+	status       string // status of child in the cluster
 }
 
 // ===========================================

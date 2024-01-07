@@ -14,7 +14,7 @@ const (
 	MaxApplyTries = 1024
 )
 
-func (a *agent) syncAgentChange(ca *agent, action int32) error {
+func (a *agent) syncAgentChange(ca *agentInfo, action int32) error {
 	ni := NodeInfo{
 		Id:       ca.id,
 		Address:  ca.addr,

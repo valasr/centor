@@ -20,7 +20,7 @@ func (a *agent) CreatechildStream(c *child, done chan bool) error {
 	// create child object
 	if cc, ok := a.childs[c.id]; ok {
 		// store client connection and proto info
-		cc.stream = stream{
+		cc.clientStream = clientStream{
 			conn:  conn,
 			proto: proto.NewDiscoveryClient(conn),
 			err:   make(chan error, 1),
@@ -28,7 +28,7 @@ func (a *agent) CreatechildStream(c *child, done chan bool) error {
 
 		done <- true
 		// run health check conenction for this child
-		go connHealthCheck(&cc.stream, time.Second*5)
+		go connHealthCheck(&cc.clientStream, time.Second*5)
 	} else {
 		return fmt.Errorf("child you want to check not exist")
 	}
@@ -37,5 +37,5 @@ func (a *agent) CreatechildStream(c *child, done chan bool) error {
 	c.status = StatusConnected
 
 	// return back error message when child is disconnected or failed
-	return <-c.stream.err
+	return <-c.clientStream.err
 }

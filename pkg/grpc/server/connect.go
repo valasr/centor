@@ -39,13 +39,13 @@ func (a *agent) Connect(stream proto.Discovery_ConnectServer) error {
 		// wait for receive message
 		case res := <-resCh:
 			c = &child{
-				agent: agent{
+				agentInfo: agentInfo{
 					id:       res.Id,
 					dc:       res.DataCenter,
 					addr:     res.Addr,
 					isServer: res.IsServer,
 					isLeader: res.IsLeader,
-					parent:   &parent{agent: agent{}},
+					parent:   &parent{agentInfo: agentInfo{}},
 				},
 			}
 			c.parent.id = res.ParentId
@@ -78,7 +78,7 @@ func (a *agent) Connect(stream proto.Discovery_ConnectServer) error {
 				// wait for child to connect done
 				<-connected
 				// then, send changes to leader
-				err := a.syncAgentChange(&c.agent, ChangeActionAdd)
+				err := a.syncAgentChange(&c.agentInfo, ChangeActionAdd)
 				if err != nil {
 					errCh <- fmt.Errorf("error in sync change : %s", err.Error())
 				}
@@ -94,7 +94,7 @@ func (a *agent) Connect(stream proto.Discovery_ConnectServer) error {
 				}
 
 				// send change for remove client to leader
-				err := a.syncAgentChange(&c.agent, ChangeActionRemove)
+				err := a.syncAgentChange(&c.agentInfo, ChangeActionRemove)
 				if err != nil {
 					return fmt.Errorf("error in sync change : %s", err.Error())
 				}
@@ -114,7 +114,7 @@ func leavechild(a *agent, c *child) error {
 	}
 	a.childs[c.id].status = StatusDisconnected
 	a.weight--
-	c.stream.err <- fmt.Errorf("client disconnected")
+	c.clientStream.err <- fmt.Errorf("client disconnected")
 	fmt.Printf("Disconnect client - ID=%s\n", c.id)
 
 	return nil

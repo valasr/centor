@@ -43,12 +43,12 @@ func (a *agent) ConnectToParent(addrs []string) error {
 
 	// create parent object
 	a.parent = &parent{
-		agent: agent{ // parent agent
+		agentInfo: agentInfo{ // parent agent
 			addr:     si.Addr,
 			id:       si.Id,
 			isLeader: si.IsLeader,
 		},
-		stream: stream{ // parent stream
+		clientStream: clientStream{ // parent stream
 			conn:  conn,
 			proto: proto.NewDiscoveryClient(conn),
 			err:   make(chan error, 1),
@@ -65,12 +65,12 @@ func (a *agent) ConnectToParent(addrs []string) error {
 	go func() {
 		err = grpc_Connect(context.Background(), a)
 		if err != nil {
-			a.parent.stream.err <- fmt.Errorf("error in sync : %s", err.Error())
+			a.parent.clientStream.err <- fmt.Errorf("error in sync : %s", err.Error())
 		}
 	}()
 
 	// health check conenction for parent server
-	go connHealthCheck(&a.parent.stream, time.Second*5)
+	go connHealthCheck(&a.parent.clientStream, time.Second*5)
 
-	return <-a.parent.stream.err
+	return <-a.parent.clientStream.err
 }

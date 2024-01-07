@@ -19,6 +19,8 @@ type Config struct {
 
 func (a *agent) Stop() error {
 	fmt.Println("Stopping agent...")
+	a.listener.Close()
+	a.grpcServer.Stop()
 	return nil
 }
 
@@ -36,13 +38,14 @@ func NewServer(cnf Config) (*agent, error) {
 	}
 	// create default agent instance
 	*a = agent{
-		id:       cnf.Name,
-		dc:       cnf.DataCenter,
-		addr:     fmt.Sprintf("%s:%d", host, cnf.Port),
-		childs:   make(map[string]*child),
-		isServer: cnf.IsServer,
-		isLeader: cnf.IsLeader,
-
+		agentInfo: agentInfo{
+			id:       cnf.Name,
+			dc:       cnf.DataCenter,
+			addr:     fmt.Sprintf("%s:%d", host, cnf.Port),
+			isServer: cnf.IsServer,
+			isLeader: cnf.IsLeader,
+			childs:   make(map[string]*child),
+		},
 		isReady:    newBroadcastBool(),
 		isConneted: newBroadcastBool(),
 	}
