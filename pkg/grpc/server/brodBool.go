@@ -1,18 +1,16 @@
 package grpc_server
 
-import "sync"
-
 type brodBool struct {
-	l   sync.Mutex
-	val bool
+	lock chan bool
+	val  bool
 }
 
 func newBroadcastBool() *brodBool {
 	b := &brodBool{
-		l:   sync.Mutex{},
-		val: false,
+		lock: make(chan bool, 1),
+		val:  false,
 	}
-	b.l.Lock()
+	b.lock <- true
 
 	return b
 }
@@ -23,12 +21,12 @@ func (b *brodBool) Set(status bool) {
 			return
 		}
 		b.val = true
-		b.l.Unlock()
+		<-b.lock
 	} else {
 		if b.val == false {
 			return
 		}
-		b.l.Lock()
+		b.lock <- true
 		b.val = false
 	}
 }
@@ -38,6 +36,16 @@ func (b *brodBool) IsTrue() bool {
 }
 
 func (b *brodBool) WaitForTrue() {
-	b.l.Lock()
-	defer b.l.Unlock()
+	b.lock <- true
+	defer func() { <-b.lock }()
+}
+
+func (b *brodBool) GetC() chan struct{} {
+	b.lock <- true
+	defer func() { <-b.lock }()
+
+	// create temporary channel for selection
+	var c chan struct{} = make(chan struct{}, 1)
+	c <- struct{}{}
+	return c
 }

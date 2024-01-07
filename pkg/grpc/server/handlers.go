@@ -29,25 +29,21 @@ type FileHandler struct {
 
 // wait for current agent is running completely
 func (h *CoreHandlers) WaitForReady(ctx context.Context) error {
-	// select {
-	// case <-ctx.Done():
-	// 	return ctx.Err()
-	// case <-h.agent.isReady.WaitForTrue():
-	// 	return nil
-	// }
-	h.agent.isReady.WaitForTrue()
-	return nil
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case <-h.agent.isReady.GetC():
+		return nil
+	}
 }
 
 func (h *CoreHandlers) WaitForConnect(ctx context.Context) error {
-	// select {
-	// case <-ctx.Done():
-	// 	return ctx.Err()
-	// case <-h.agent.isConneted.WaitForTrue():
-	// 	return nil
-	// }
-	h.agent.isConneted.WaitForTrue()
-	return nil
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case <-h.agent.isConneted.GetC():
+		return nil
+	}
 }
 
 func (h *CoreHandlers) GetMyId() string {
