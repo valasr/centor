@@ -15,7 +15,6 @@ type PluginProps struct {
 }
 
 type CoreHandlerInterface interface {
-	Call(context.Context) (string, error)
 	GetClusterNodes() map[string]grpc_server.NodeInfo
 	WaitForReady(context.Context) error
 	SendFile(context.Context, string, string, []byte) error

@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"strings"
 
 	"github.com/mrtdeh/centor/proto"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -250,15 +249,15 @@ func (h *CoreHandlers) SendFile(ctx context.Context, nodeId, filename string, da
 }
 
 // Todo: this function should be removed
-func (h *CoreHandlers) Call(ctx context.Context) (string, error) {
+func (h *CoreHandlers) Call(ctx context.Context) ([]string, error) {
 
 	res, err := h.agent.Call(ctx, &proto.CallRequest{
 		AgentId: h.agent.id,
 	})
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	return strings.Join(res.Tags, " ,"), nil
+	return res.Tags, nil
 }
 
 // returns a map of all the nodes in the cluster
