@@ -18,11 +18,11 @@ func (a *agent) Serve(lis net.Listener) error {
 		}
 	}
 	proto.RegisterDiscoveryServer(grpcServer, a)
-	fmt.Println("listen an ", a.addr)
 
 	a.listener = lis
 	a.grpcServer = grpcServer
-
 	a.isReady.Set(true)
+
+	debug(a.id, "listen an %s", a.addr)
 	return grpcServer.Serve(lis)
 }

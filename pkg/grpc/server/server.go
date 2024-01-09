@@ -18,7 +18,7 @@ type Config struct {
 }
 
 func (a *agent) Stop() error {
-	debug("Stopping agent : %s", a.id)
+	debug(a.id, "Stopping agent : %s", a.id)
 	a.isStoping.Set(true)
 	time.Sleep(time.Second)
 	a.grpcServer.GracefulStop()
@@ -80,18 +80,21 @@ func NewServer(cnf Config) (*agent, error) {
 		}
 	}
 
-	go func() {
-		a.isReady.WaitForTrue()
-		for {
-			// try connect to parent server
-			err := a.ConnectToParent(servers)
-			if err != nil {
-				fmt.Println(err.Error())
+	if len(servers) > 0 {
+		go func() {
+			a.isReady.WaitForTrue()
+			for {
+				debug(a.id, "try to connect to parent")
+				// try connect to parent server
+				err := a.ConnectToParent(servers)
+				if err != nil {
+					fmt.Println(err.Error())
+				}
+				// retry delay time 1 second
+				time.Sleep(time.Second * 1)
 			}
-			// retry delay time 1 second
-			time.Sleep(time.Second * 1)
-		}
-	}()
+		}()
+	}
 
 	fmt.Println("DataCenter : ", cnf.DataCenter)
 	return a, nil

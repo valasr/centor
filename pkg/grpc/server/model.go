@@ -19,7 +19,7 @@ type agentInfo struct {
 }
 type agent struct {
 	agentInfo
-	// isPrimary bool   // is this node primary server or not
+
 	isSubCluster bool      // is this node
 	isReady      *brodBool // is this node ready or not
 	isConneted   *brodBool // is this node connected to parent or not

@@ -6,7 +6,6 @@ import (
 	"log"
 	"sync"
 	"testing"
-	"time"
 
 	grpc_server "github.com/mrtdeh/centor/pkg/grpc/server"
 	"github.com/mrtdeh/centor/proto"
@@ -88,20 +87,12 @@ func TestConnect(t *testing.T) {
 
 				go func() {
 					if err := a.Serve(nil); err != nil {
-						log.Fatal(err)
-					}
-				}()
-
-				go func() {
-					fmt.Println("debug ConnectToParent ......")
-					err = a.ConnectToParent(tt.in.Servers)
-					if err != nil {
-						fmt.Printf("Err -> \nGot: %q\n", err)
-						t.Errorf("Err -> \nGot: %q\n", err)
+						// log.Fatal(err)
 					}
 				}()
 
 				a.GetCoreHandler().WaitForConnect(ctx)
+
 				res, err := a.Call(ctx, &proto.CallRequest{
 					AgentId: a.GetCoreHandler().GetMyId(),
 				})
@@ -111,14 +102,18 @@ func TestConnect(t *testing.T) {
 					if len(res.Tags) != 2 {
 						t.Errorf("tags must ne 2 but got %d\n", len(res.Tags))
 					}
-					time.Sleep(time.Second)
-					return
+
+					fmt.Println("DEBUG : end")
+					// time.Sleep(time.Second)
+					// return
 				}
 			}()
+
 			wg.Wait()
+			fmt.Println("DEBUG : end 222")
 
 		})
 	}
-
+	fmt.Println("DEBUG : end 333")
 	// time.Sleep(time.Second * 3)
 }

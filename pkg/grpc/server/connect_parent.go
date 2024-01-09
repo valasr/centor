@@ -13,6 +13,7 @@ type connectConfig struct {
 }
 
 func (a *agent) ConnectToParent(addrs []string) error {
+	debug(a.id, "ConnectToParent from %s", a.id)
 	if len(addrs) == 0 {
 		return nil
 	}

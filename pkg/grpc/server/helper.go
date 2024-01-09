@@ -37,18 +37,20 @@ type healthcheckOpt struct {
 }
 
 func connHealthCheck(opt healthcheckOpt) {
-	msg := fmt.Sprintf("health check %s[%s]", opt.Id, getRandHash(5))
+	msg := fmt.Sprintf("health check %s", opt.Id)
 
-	debug("start %s", msg)
+	debug("", "start %s", msg)
 	defer func() {
-		debug("closed %s", msg)
+		debug("", "closed %s", msg)
 	}()
+
+	timer := time.NewTimer(opt.Duration)
 
 	for {
 		select {
 		case <-opt.StopingC.GetC():
 			return
-		default:
+		case <-timer.C:
 			if err := connIsFailed(opt.ClientS.conn); err != nil {
 				opt.ClientS.err <- err
 				return
@@ -58,7 +60,8 @@ func connHealthCheck(opt healthcheckOpt) {
 				opt.ClientS.err <- fmt.Errorf("error in ping request: %v", err)
 				return
 			}
-			time.Sleep(opt.Duration)
+
+			timer.Reset(opt.Duration)
 		}
 
 	}
@@ -86,9 +89,15 @@ func getRandHash(length int) string {
 	return b64[:length]
 }
 
-func debug(format string, a ...any) {
+func debug(id, format string, a ...any) {
 	if Debug {
-		fmt.Printf(format+"\n", a...)
+		if id == "" {
+			id = getRandHash(5)
+		}
+		id = "ID=" + id
+
+		// fmt.Printf("[DEBUG]"+id+" :: "+format+"\n", a...)
+		fmt.Printf("[DEBUG]::"+format+"::["+id+"]\n", a...)
 	}
 }
 
