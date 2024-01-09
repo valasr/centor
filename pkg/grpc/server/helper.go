@@ -89,15 +89,13 @@ func getRandHash(length int) string {
 	return b64[:length]
 }
 
-func debug(id, format string, a ...any) {
+func debug(meta, format string, a ...any) {
 	if Debug {
-		if id == "" {
-			id = getRandHash(5)
+		if meta == "" {
+			meta = getRandHash(5)
 		}
-		id = "ID=" + id
 
-		// fmt.Printf("[DEBUG]"+id+" :: "+format+"\n", a...)
-		fmt.Printf("[DEBUG]::"+format+"::["+id+"]\n", a...)
+		fmt.Printf("[DEBUG]::"+format+"::["+meta+"]\n", a...)
 	}
 }
 

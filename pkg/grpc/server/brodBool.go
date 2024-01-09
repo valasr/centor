@@ -27,15 +27,16 @@ func (b *brodBool) Set(status bool) {
 		if b.val == true {
 			return
 		}
-		b.val = true
+
 		b.C <- struct{}{}
 	} else {
 		if b.val == false {
 			return
 		}
 		<-b.C
-		b.val = false
 	}
+
+	b.val = status
 }
 
 func (b *brodBool) IsTrue() bool {
