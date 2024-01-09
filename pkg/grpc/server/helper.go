@@ -48,7 +48,7 @@ func connHealthCheck(opt healthcheckOpt) {
 
 	for {
 		select {
-		case <-opt.StopingC.GetC():
+		case <-opt.StopingC.C:
 			return
 		case <-timer.C:
 			if err := connIsFailed(opt.ClientS.conn); err != nil {

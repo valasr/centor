@@ -18,7 +18,7 @@ type Config struct {
 }
 
 func (a *agent) Stop() error {
-	debug(a.id, "Stopping agent : %s", a.id)
+	debug(a.id, "stopping agent : %s", a.id)
 	a.isStoping.Set(true)
 	time.Sleep(time.Second)
 	a.grpcServer.GracefulStop()

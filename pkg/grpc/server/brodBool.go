@@ -1,16 +1,23 @@
 package grpc_server
 
 type brodBool struct {
-	lock chan bool
-	val  bool
+	C   chan struct{}
+	val bool
 }
 
 func newBroadcastBool() *brodBool {
 	b := &brodBool{
-		lock: make(chan bool, 1),
-		val:  false,
+		C:   make(chan struct{}, 1),
+		val: false,
 	}
-	b.lock <- true
+
+	go func() {
+		for {
+			if b.val {
+				b.C <- struct{}{}
+			}
+		}
+	}()
 
 	return b
 }
@@ -21,12 +28,12 @@ func (b *brodBool) Set(status bool) {
 			return
 		}
 		b.val = true
-		<-b.lock
+		b.C <- struct{}{}
 	} else {
 		if b.val == false {
 			return
 		}
-		b.lock <- true
+		<-b.C
 		b.val = false
 	}
 }
@@ -36,16 +43,5 @@ func (b *brodBool) IsTrue() bool {
 }
 
 func (b *brodBool) WaitForTrue() {
-	b.lock <- true
-	defer func() { <-b.lock }()
-}
-
-func (b *brodBool) GetC() chan struct{} {
-	b.lock <- true
-	defer func() { <-b.lock }()
-
-	// create temporary channel for selection
-	var c chan struct{} = make(chan struct{}, 1)
-	c <- struct{}{}
-	return c
+	<-b.C
 }

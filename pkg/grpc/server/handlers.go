@@ -31,7 +31,7 @@ func (h *CoreHandlers) WaitForReady(ctx context.Context) error {
 	select {
 	case <-ctx.Done():
 		return ctx.Err()
-	case <-h.agent.isReady.GetC():
+	case <-h.agent.isReady.C:
 		return nil
 	}
 }
@@ -40,7 +40,7 @@ func (h *CoreHandlers) WaitForConnect(ctx context.Context) error {
 	select {
 	case <-ctx.Done():
 		return ctx.Err()
-	case <-h.agent.isConneted.GetC():
+	case <-h.agent.isConneted.C:
 		return nil
 	}
 }

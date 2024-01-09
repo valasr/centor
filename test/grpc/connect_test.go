@@ -103,17 +103,13 @@ func TestConnect(t *testing.T) {
 						t.Errorf("tags must ne 2 but got %d\n", len(res.Tags))
 					}
 
-					fmt.Println("DEBUG : end")
 					// time.Sleep(time.Second)
 					// return
 				}
 			}()
 
 			wg.Wait()
-			fmt.Println("DEBUG : end 222")
 
 		})
 	}
-	fmt.Println("DEBUG : end 333")
-	// time.Sleep(time.Second * 3)
 }
