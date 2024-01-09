@@ -70,7 +70,13 @@ func (a *agent) ConnectToParent(addrs []string) error {
 	}()
 
 	// health check conenction for parent server
-	go connHealthCheck(&a.parent.clientStream, time.Second*5)
+	go connHealthCheck(healthcheckOpt{
+		Id:       fmt.Sprintf("%s-to-%s", a.id, a.parent.id),
+		StopingC: a.isStoping,
+		ClientS:  &a.parent.clientStream,
+		Duration: time.Second * 5,
+	})
 
+	a.isConneted.Set(true)
 	return <-a.parent.clientStream.err
 }

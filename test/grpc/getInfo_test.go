@@ -2,8 +2,10 @@ package grpc_test
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"testing"
+	"time"
 
 	grpc_server "github.com/mrtdeh/centor/pkg/grpc/server"
 	"github.com/mrtdeh/centor/proto"
@@ -12,8 +14,6 @@ import (
 )
 
 func server(ctx context.Context) (proto.DiscoveryClient, func()) {
-	// buffer := 101024 * 1024
-	// lis := bufconn.Listen(buffer)
 
 	app, _ := grpc_server.NewServer(grpc_server.Config{
 		Name:       "ali",
@@ -32,24 +32,26 @@ func server(ctx context.Context) (proto.DiscoveryClient, func()) {
 
 	app.GetCoreHandler().WaitForReady(ctx)
 
-	conn, err := grpc.DialContext(ctx, "localhost:3000",
-		// grpc.WithContextDialer(func(context.Context, string) (net.Conn, error) {
-		// 	return lis.Dial()
-		// }),
+	queryCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+
+	conn, err := grpc.DialContext(queryCtx, "localhost:3000",
+
 		grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Printf("error connecting to server: %v", err)
 	}
 
+	client := proto.NewDiscoveryClient(conn)
+
 	closer := func() {
-		// err := lis.Close()
-		// if err != nil {
-		// 	log.Printf("error closing listener: %v", err)
+
+		fmt.Println("stopping.....")
+		cancel()
+		// if err := conn.Close(); err != nil {
+		// 	log.Fatal(err)
 		// }
 		app.Stop()
 	}
-
-	client := proto.NewDiscoveryClient(conn)
 
 	return client, closer
 }

@@ -18,9 +18,11 @@ type Config struct {
 }
 
 func (a *agent) Stop() error {
-	fmt.Println("Stopping agent...")
+	debug("Stopping agent : %s", a.id)
+	a.isStoping.Set(true)
+	time.Sleep(time.Second)
+	a.grpcServer.GracefulStop()
 	a.listener.Close()
-	a.grpcServer.Stop()
 	return nil
 }
 
@@ -48,6 +50,7 @@ func NewServer(cnf Config) (*agent, error) {
 		},
 		isReady:    newBroadcastBool(),
 		isConneted: newBroadcastBool(),
+		isStoping:  newBroadcastBool(),
 	}
 
 	if !cnf.IsLeader || len(cnf.Primaries) > 0 {

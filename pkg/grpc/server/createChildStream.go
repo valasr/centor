@@ -7,7 +7,7 @@ import (
 	"github.com/mrtdeh/centor/proto"
 )
 
-func (a *agent) CreatechildStream(c *child, done chan bool) error {
+func (a *agent) CreateChildStream(c *child, done chan bool) error {
 	// dial to child listener
 	conn, err := grpc_Dial(DialConfig{
 		Address: c.addr,
@@ -28,7 +28,14 @@ func (a *agent) CreatechildStream(c *child, done chan bool) error {
 
 		done <- true
 		// run health check conenction for this child
-		go connHealthCheck(&cc.clientStream, time.Second*5)
+
+		go connHealthCheck(healthcheckOpt{
+			Id:       fmt.Sprintf("%s-to-%s", a.id, cc.id),
+			StopingC: a.isStoping,
+			ClientS:  &cc.clientStream,
+			Duration: time.Second * 5,
+		})
+
 	} else {
 		return fmt.Errorf("child you want to check not exist")
 	}

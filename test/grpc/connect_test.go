@@ -2,14 +2,17 @@ package grpc_test
 
 import (
 	"context"
+	"fmt"
 	"log"
+	"sync"
 	"testing"
+	"time"
 
 	grpc_server "github.com/mrtdeh/centor/pkg/grpc/server"
 	"github.com/mrtdeh/centor/proto"
 )
 
-func listenServer(ctx context.Context) {
+func listenServer(ctx context.Context) func() {
 	// buffer := 101024 * 1024
 	// lis := bufconn.Listen(buffer)
 
@@ -28,12 +31,20 @@ func listenServer(ctx context.Context) {
 		}
 	}()
 	app.GetCoreHandler().WaitForReady(ctx)
+
+	closer := func() {
+		fmt.Println("stopping.....")
+		app.Stop()
+	}
+
+	return closer
 }
 
 func TestConnect(t *testing.T) {
 	ctx := context.Background()
 
-	listenServer(ctx)
+	closer := listenServer(ctx)
+	defer closer()
 
 	type expectation struct {
 		out *proto.InfoResponse
@@ -46,8 +57,9 @@ func TestConnect(t *testing.T) {
 	}{
 		"Must_Success": {
 			in: &grpc_server.Config{
-				Name:       "client-1",
+				Name:       "reza",
 				DataCenter: "dc1",
+				IsServer:   true,
 				Servers:    []string{"localhost:3000"},
 				Host:       "localhost",
 				Port:       3001,
@@ -61,36 +73,52 @@ func TestConnect(t *testing.T) {
 		},
 	}
 
+	var wg sync.WaitGroup
 	for scenario, tt := range tests {
+		wg.Add(1)
 		t.Run(scenario, func(t *testing.T) {
-
 			go func() {
+				defer wg.Done()
+
 				a, err := grpc_server.NewServer(*tt.in)
 				if err != nil {
 					t.Errorf("Err -> %s\n", err)
 				}
+				defer a.Stop()
 
-				err = a.ConnectToParent(tt.in.Servers)
+				go func() {
+					if err := a.Serve(nil); err != nil {
+						log.Fatal(err)
+					}
+				}()
+
+				go func() {
+					fmt.Println("debug ConnectToParent ......")
+					err = a.ConnectToParent(tt.in.Servers)
+					if err != nil {
+						fmt.Printf("Err -> \nGot: %q\n", err)
+						t.Errorf("Err -> \nGot: %q\n", err)
+					}
+				}()
+
+				a.GetCoreHandler().WaitForConnect(ctx)
+				res, err := a.Call(ctx, &proto.CallRequest{
+					AgentId: a.GetCoreHandler().GetMyId(),
+				})
 				if err != nil {
 					t.Errorf("Err -> \nGot: %q\n", err)
 				} else {
-
-					res, err := a.Call(context.Background(), &proto.CallRequest{
-						AgentId: a.GetCoreHandler().GetMyId(),
-					})
-					if err != nil {
-						t.Errorf("Err -> \nGot: %q\n", err)
-					} else {
-						if len(res.Tags) != 2 {
-							t.Errorf("tags must ne 2 but got %d\n", len(res.Tags))
-						}
-						return
+					if len(res.Tags) != 2 {
+						t.Errorf("tags must ne 2 but got %d\n", len(res.Tags))
 					}
-
+					time.Sleep(time.Second)
+					return
 				}
 			}()
+			wg.Wait()
 
 		})
 	}
 
+	// time.Sleep(time.Second * 3)
 }

@@ -67,7 +67,7 @@ func (a *agent) Connect(stream proto.Discovery_ConnectServer) error {
 
 			// Dial back to joined server
 			go func() {
-				err := a.CreatechildStream(c, connected)
+				err := a.CreateChildStream(c, connected)
 				if err != nil {
 					errCh <- fmt.Errorf("error in create child stream : %s", err.Error())
 				}
@@ -128,6 +128,6 @@ func addchild(a *agent, c *child) error {
 	a.childs[c.id] = c
 	a.weight++
 
-	fmt.Printf("Added new client - ID=%s\n", c.id)
+	fmt.Printf("Added new client - ID=%s ME=%s\n", c.id, a.id)
 	return nil
 }

@@ -2,12 +2,14 @@ package grpc_server
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"math/rand"
 	"net"
 	"time"
 
-	"github.com/golang/protobuf/ptypes/any"
+	Aany "github.com/golang/protobuf/ptypes/any"
 	"github.com/golang/protobuf/ptypes/wrappers"
 	"github.com/mrtdeh/centor/proto"
 	"google.golang.org/grpc"
@@ -17,40 +19,50 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-func (a *agent) parentErr() <-chan error {
-	return a.parent.clientStream.err
-}
+var (
+	Debug      bool       = true
+	seededRand *rand.Rand = rand.New(rand.NewSource(time.Now().UnixNano()))
+)
 
-// =======================================
-
-func (c *child) childErr() <-chan error {
-	return c.clientStream.err
-}
-
-// ======================================
-
-func (a *agent) Closechild(c *child) error {
-	if _, ok := a.childs[c.id]; !ok {
-		return fmt.Errorf("child %s is not exist", c.id)
-	}
-	delete(a.childs, c.id)
-	return nil
-}
+const (
+	charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+)
 
 // ========================== HEALTH CHECK =========================
-func connHealthCheck(s *clientStream, d time.Duration) {
+type healthcheckOpt struct {
+	Id       string
+	StopingC *brodBool
+	ClientS  *clientStream
+	Duration time.Duration
+}
+
+func connHealthCheck(opt healthcheckOpt) {
+	msg := fmt.Sprintf("health check %s[%s]", opt.Id, getRandHash(5))
+
+	debug("start %s", msg)
+	defer func() {
+		debug("closed %s", msg)
+	}()
+
 	for {
-		if err := connIsFailed(s.conn); err != nil {
-			s.err <- err
+		select {
+		case <-opt.StopingC.GetC():
 			return
+		default:
+			if err := connIsFailed(opt.ClientS.conn); err != nil {
+				opt.ClientS.err <- err
+				return
+			}
+			_, err := opt.ClientS.proto.Ping(context.Background(), &proto.PingRequest{})
+			if err != nil {
+				opt.ClientS.err <- fmt.Errorf("error in ping request: %v", err)
+				return
+			}
+			time.Sleep(opt.Duration)
 		}
-		_, err := s.proto.Ping(context.Background(), &proto.PingRequest{})
-		if err != nil {
-			s.err <- err
-			return
-		}
-		time.Sleep(d)
+
 	}
+
 }
 
 func connIsFailed(conn *grpc.ClientConn) error {
@@ -61,6 +73,23 @@ func connIsFailed(conn *grpc.ClientConn) error {
 		return fmt.Errorf("connection is failed with status %s", status)
 	}
 	return nil
+}
+
+func getRandHash(length int) string {
+	b := rand.Intn(10000)
+	b64 := base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%d", b)))
+
+	if len(b64) < length {
+		return b64
+	}
+
+	return b64[:length]
+}
+
+func debug(format string, a ...any) {
+	if Debug {
+		fmt.Printf(format+"\n", a...)
+	}
 }
 
 // =============================================================
@@ -118,13 +147,13 @@ func grpc_Connect(ctx context.Context, a *agent) error {
 		if res != nil {
 			pid = res.Id
 		}
-		fmt.Printf("Conenct Back from parent - ID=%s\n", pid)
+		fmt.Printf("Conenct Back from parent - ID=%s ME=%s\n", pid, a.id)
 	}
 
 }
 
-func ConvertInterfaceToAny(v interface{}) (*any.Any, error) {
-	anyValue := &any.Any{}
+func ConvertInterfaceToAny(v interface{}) (*Aany.Any, error) {
+	anyValue := &Aany.Any{}
 	bytes, _ := json.Marshal(v)
 	bytesValue := &wrappers.BytesValue{
 		Value: bytes,

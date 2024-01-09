@@ -23,6 +23,7 @@ type agent struct {
 	isSubCluster bool      // is this node
 	isReady      *brodBool // is this node ready or not
 	isConneted   *brodBool // is this node connected to parent or not
+	isStoping    *brodBool // is this node stoped or not
 
 	listener   net.Listener
 	grpcServer *grpc.Server
